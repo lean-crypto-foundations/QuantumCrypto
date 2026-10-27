@@ -49,14 +49,19 @@ queries into a sum of projected intermediate states, whose squared norms sum to
   `H'` agreeing outside `S`
 * `o2h_extraction_of_QAdv` — the squared form `≤ (4q)² · Pr[Find]`, comparable
   to `Quantum.O2H.O2HExtraction`
+* `o2h_semiclassical_mixed` — `o2h_semiclassical` for an arbitrary initial
+  density matrix
 
 ## The adversary class and the constants
 
-The adversary has a pure initial state (`A.init = ψψ†`), applies the oracle `q`
-times between `q + 1` unitaries, and ends with one projective measurement. The
-bounds are `2√(q · P_find)` against the `Find = false` branch and
-`4√(q · P_find)` between two functions. Since `q` counts oracle applications,
-these are at least as tight as the `d + 1` form of Ambainis–Hamburg–Unruh.
+The adversary applies the oracle `q` times between `q + 1` unitaries and ends
+with one projective measurement, so its query depth `d` is `q`. The bounds are
+`2√(q · P_find)` against the `Find = false` branch and `4√(q · P_find)`
+between two functions. Ambainis–Hamburg–Unruh prove `√((d + 1) · P_find)` and
+`2√((d + 1) · P_find)` respectively. At `d = q` the bounds here are weaker by
+the factor `2√(q / (q + 1))`, which lies in `[√2, 2)` for `q ≥ 1`.
+`o2h_semiclassical`, `o2h` and `o2h_extraction_of_QAdv` assume a pure initial
+state `A.init = ψψ†`; `o2h_semiclassical_mixed` does not.
 
 ## References
 
@@ -634,10 +639,10 @@ theorem ofReal_two_mul_sqrt {F : ℝ} (hF : 0 ≤ F) :
     `|Pr[out = 1 : A^H] − Pr[out = 1 ∧ ¬Find : A^{H \ S}]| ≤ 2 √(q · Pr[Find])`.
 
     References: Ambainis, Hamburg, Unruh, "Quantum security proofs using
-    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1. The
-    paper's constant is the query depth; the constant here is the number of
-    queries `q`, which coincides with the depth for the sequential adversary
-    `QAdv`. -/
+    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1, which
+    has the bound `√((d + 1) · Pr[Find])` for query depth `d`. For the
+    sequential adversary `QAdv` the depth is `q`, and the bound here is weaker
+    by the factor `2√(q / (q + 1))`. -/
 theorem o2h_semiclassical (A : QAdv m n w q) (H : Fin m → Fin n) (S : Finset (Fin m))
     {ψ : Fin (m * n * w) → ℂ} (hpure : A.init.val = vecMulVec ψ (star ψ)) :
     absDiff (prOut A H) (prOutNoFind A H S) ≤
@@ -667,10 +672,10 @@ theorem prFind_congr (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fi
     `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]| ≤ 4 √(q · Pr[Find])`.
 
     References: Ambainis, Hamburg, Unruh, "Quantum security proofs using
-    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1 (the
-    two-function form, obtained from `o2h_semiclassical` applied to `H` and
-    `H'`); the constant `q` is the query count in place of the paper's query
-    depth. -/
+    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1, which
+    has the bound `2√((d + 1) · Pr[Find])` for query depth `d`. The bound here
+    is obtained from `o2h_semiclassical` applied to `H` and `H'`; at `d = q` it
+    is weaker by the factor `2√(q / (q + 1))`. -/
 theorem o2h (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
     (hpure : A.init.val = vecMulVec ψ (star ψ)) :
