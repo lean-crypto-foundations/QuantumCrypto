@@ -47,8 +47,9 @@ queries into a sum of projected intermediate states, whose squared norms sum to
 * `o2h_semiclassical` — `|Pr[out = 1 : H] − Pr[out = 1 ∧ ¬Find : H \ S]| ≤ 2 √(q · Pr[Find])`
 * `o2h` — `|Pr[out = 1 : H] − Pr[out = 1 : H']| ≤ 4 √(q · Pr[Find])` for `H`,
   `H'` agreeing outside `S`
-* `o2h_extraction_of_QAdv` — the squared form `≤ (4q)² · Pr[Find]`, comparable
-  to `Quantum.O2H.O2HExtraction`
+* `o2h_sq` — the squared form `≤ 16 q · Pr[Find]`
+* `o2h_extraction_of_QAdv` — the weaker squared form `≤ (4q)² · Pr[Find]`,
+  comparable to `Quantum.O2H.O2HExtraction`
 * `o2h_semiclassical_mixed` — `o2h_semiclassical` for an arbitrary initial
   density matrix
 
@@ -59,9 +60,10 @@ with one projective measurement, so its query depth `d` is `q`. The bounds are
 `2√(q · P_find)` against the `Find = false` branch and `4√(q · P_find)`
 between two functions. Ambainis–Hamburg–Unruh prove `√((d + 1) · P_find)` and
 `2√((d + 1) · P_find)` respectively. At `d = q` the bounds here are weaker by
-the factor `2√(q / (q + 1))`, which lies in `[√2, 2)` for `q ≥ 1`.
-`o2h_semiclassical`, `o2h` and `o2h_extraction_of_QAdv` assume a pure initial
-state `A.init = ψψ†`; `o2h_semiclassical_mixed` does not.
+the factor `2√(q / (q + 1))`, which lies in `[√2, 2)` for `q ≥ 1`; squared,
+`16 q · P_find` against the paper's `4 (q + 1) · P_find`.
+`o2h_semiclassical`, `o2h`, `o2h_sq` and `o2h_extraction_of_QAdv` assume a pure
+initial state `A.init = ψψ†`; `o2h_semiclassical_mixed` does not.
 
 ## References
 
@@ -692,18 +694,30 @@ theorem o2h (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     _ = 4 * ((q : ℝ≥0∞) * prFind A H S) ^ (1 / 2 : ℝ) := by
         rw [← prFind_congr A H H' S hHH' hpure]; ring
 
-/-- The squared form of `o2h`: `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ (4q)² · Pr[Find]`,
-    the shape of `Quantum.O2H.O2HExtraction` with constant `4q` in place of `2q`. -/
-theorem o2h_extraction_of_QAdv (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
+/-- The squared form of `o2h`: `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ 16 q · Pr[Find]`.
+    Ambainis–Hamburg–Unruh's two-function bound squares to `4 (q + 1) · Pr[Find]` at
+    query depth `q`. -/
+theorem o2h_sq (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
     (hpure : A.init.val = vecMulVec ψ (star ψ)) :
-    absDiff (prOut A H) (prOut A H') ^ 2 ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFind A H S := by
+    absDiff (prOut A H) (prOut A H') ^ 2 ≤ 16 * (q : ℝ≥0∞) * prFind A H S := by
   have h := o2h A H H' S hHH' hpure
   have hsq : (((q : ℝ≥0∞) * prFind A H S) ^ (1 / 2 : ℝ)) ^ 2 = (q : ℝ≥0∞) * prFind A H S := by
     rw [← ENNReal.rpow_natCast, ← ENNReal.rpow_mul]; norm_num
   calc absDiff (prOut A H) (prOut A H') ^ 2
       ≤ (4 * ((q : ℝ≥0∞) * prFind A H S) ^ (1 / 2 : ℝ)) ^ 2 := pow_le_pow_left' h 2
-    _ = 4 ^ 2 * ((q : ℝ≥0∞) * prFind A H S) := by rw [mul_pow, hsq]
+    _ = 16 * (q : ℝ≥0∞) * prFind A H S := by rw [mul_pow, hsq, ← mul_assoc]; norm_num
+
+/-- The weaker squared form `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ (4q)² · Pr[Find]`
+    of `o2h_sq`, the shape of `Quantum.O2H.O2HExtraction` with constant `4q` in place of
+    `2q`. -/
+theorem o2h_extraction_of_QAdv (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
+    (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
+    (hpure : A.init.val = vecMulVec ψ (star ψ)) :
+    absDiff (prOut A H) (prOut A H') ^ 2 ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFind A H S := by
+  calc absDiff (prOut A H) (prOut A H') ^ 2
+      ≤ 16 * (q : ℝ≥0∞) * prFind A H S := o2h_sq A H H' S hHH' hpure
+    _ = 4 ^ 2 * ((q : ℝ≥0∞) * prFind A H S) := by rw [← mul_assoc]; norm_num
     _ ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFind A H S := by
         rcases Nat.eq_zero_or_pos q with hq | hq
         · subst hq; simp
