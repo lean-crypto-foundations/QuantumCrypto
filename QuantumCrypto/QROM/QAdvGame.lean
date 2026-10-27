@@ -34,7 +34,8 @@ probabilities (Ambainis–Hamburg–Unruh, CRYPTO 2019, §3).
   scalar multiples in `ℝ≥0∞`
 * `sum_mul_rpow_half_le` — `∑ᵢ pᵢ xᵢ^(1/2) ≤ (∑ᵢ pᵢ xᵢ)^(1/2)` when `∑ᵢ pᵢ = 1`
 * `o2h_avg` — `|prWin G − prWin' G| ≤ 4 √(q · prFindAvg G)`
-* `o2h_avg_sq` — the squared form `|prWin G − prWin' G|² ≤ (4q)² · prFindAvg G`
+* `o2h_avg_sq_sharp` — the squared form `|prWin G − prWin' G|² ≤ 16 q · prFindAvg G`
+* `o2h_avg_sq` — the weaker squared form `|prWin G − prWin' G|² ≤ (4q)² · prFindAvg G`
 
 ## The model
 
@@ -185,15 +186,23 @@ theorem o2h_avg (G : QGame m n w q ι) :
         congr 2
         exact Finset.sum_congr rfl fun i _ => by ring
 
-/-- The squared form of `o2h_avg`: `|prWin G − prWin' G|² ≤ (4q)² · prFindAvg G`. -/
-theorem o2h_avg_sq (G : QGame m n w q ι) :
-    absDiff (prWin G) (prWin' G) ^ 2 ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFindAvg G := by
+/-- The squared form of `o2h_avg`: `|prWin G − prWin' G|² ≤ 16 q · prFindAvg G`. -/
+theorem o2h_avg_sq_sharp (G : QGame m n w q ι) :
+    absDiff (prWin G) (prWin' G) ^ 2 ≤ 16 * (q : ℝ≥0∞) * prFindAvg G := by
   have h := o2h_avg G
   have hsq : (((q : ℝ≥0∞) * prFindAvg G) ^ (1 / 2 : ℝ)) ^ 2 = (q : ℝ≥0∞) * prFindAvg G := by
     rw [← ENNReal.rpow_natCast, ← ENNReal.rpow_mul]; norm_num
   calc absDiff (prWin G) (prWin' G) ^ 2
       ≤ (4 * ((q : ℝ≥0∞) * prFindAvg G) ^ (1 / 2 : ℝ)) ^ 2 := pow_le_pow_left' h 2
-    _ = 4 ^ 2 * ((q : ℝ≥0∞) * prFindAvg G) := by rw [mul_pow, hsq]
+    _ = 16 * (q : ℝ≥0∞) * prFindAvg G := by rw [mul_pow, hsq, ← mul_assoc]; norm_num
+
+/-- The weaker squared form `|prWin G − prWin' G|² ≤ (4q)² · prFindAvg G` of
+    `o2h_avg_sq_sharp`. -/
+theorem o2h_avg_sq (G : QGame m n w q ι) :
+    absDiff (prWin G) (prWin' G) ^ 2 ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFindAvg G := by
+  calc absDiff (prWin G) (prWin' G) ^ 2
+      ≤ 16 * (q : ℝ≥0∞) * prFindAvg G := o2h_avg_sq_sharp G
+    _ = 4 ^ 2 * ((q : ℝ≥0∞) * prFindAvg G) := by rw [← mul_assoc]; norm_num
     _ ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFindAvg G := by
         rcases Nat.eq_zero_or_pos q with hq | hq
         · subst hq; simp
