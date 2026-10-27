@@ -12,9 +12,9 @@ public import Mathlib.Analysis.MeanInequalities
 # The O2H bound with classical side information
 
 A `QGame` is a finite classical input distribution together with, at each
-input, a `q`-query adversary of `Quantum/QROM/SemiClassicalOracle.lean` and
+input, a `q`-query adversary of `QuantumCrypto.QROM.SemiClassicalOracle` and
 the two oracle functions it may be run against, agreeing outside a punctured
-set. The one-way-to-hiding bound of `Quantum/QROM/O2HTheorem.lean` holds at
+set. The one-way-to-hiding bound of `QuantumCrypto.QROM.O2HTheorem` holds at
 each input; averaging it over the input distribution and moving the average
 inside the square root by concavity gives the bound for the averaged
 probabilities (Ambainis–Hamburg–Unruh, CRYPTO 2019, §3).

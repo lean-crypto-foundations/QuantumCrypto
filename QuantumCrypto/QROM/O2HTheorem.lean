@@ -35,7 +35,7 @@ queries into a sum of projected intermediate states, whose squared norms sum to
 
 ## Main results
 
-* `run_branch_true_pure`, `prOut_eq_nrm_sq` — the standard run on a pure
+* `run_branch_true`, `prOut_eq_nrm_sq` — the standard run on a pure
   state, as a rank-one state and as a squared norm
 * `scChain_branch_false_eq`, `prOutNoFind_eq_nrm_sq` — the `Find = false`
   branch of the semi-classical run, as a rank-one state and as a squared norm
@@ -642,8 +642,8 @@ theorem ofReal_two_mul_sqrt {F : ℝ} (hF : 0 ≤ F) :
     References: Ambainis, Hamburg, Unruh, "Quantum security proofs using
     semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1, which
     has the bound `√((d + 1) · Pr[Find])` for query depth `d`. For the
-    sequential adversary `QAdv` the depth is `q`, and the bound here is weaker
-    by the factor `2√(q / (q + 1))`. -/
+    sequential adversary `QAdv` the depth is `q`, and for `q ≥ 1` the bound here is
+    weaker by the factor `2√(q / (q + 1))` (at `q = 0` both bounds vanish). -/
 theorem o2h_semiclassical (A : QAdv m n w q) (H : Fin m → Fin n) (S : Finset (Fin m))
     {ψ : Fin (m * n * w) → ℂ} (hpure : A.init.val = vecMulVec ψ (star ψ)) :
     absDiff (prOut A H) (prOutNoFind A H S) ≤
@@ -675,7 +675,7 @@ theorem prFind_congr (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fi
     References: Ambainis, Hamburg, Unruh, "Quantum security proofs using
     semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1, which
     has the bound `2√((d + 1) · Pr[Find])` for query depth `d`. The bound here
-    is obtained from `o2h_semiclassical` applied to `H` and `H'`; at `d = q` it
+    is obtained from `o2h_semiclassical` applied to `H` and `H'`; at `d = q ≥ 1` it
     is weaker by the factor `2√(q / (q + 1))`. -/
 theorem o2h (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
