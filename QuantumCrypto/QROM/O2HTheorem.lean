@@ -48,8 +48,7 @@ queries into a sum of projected intermediate states, whose squared norms sum to
 * `o2h` — `|Pr[out = 1 : H] − Pr[out = 1 : H']| ≤ 4 √(q · Pr[Find])` for `H`,
   `H'` agreeing outside `S`
 * `o2h_sq` — the squared form `≤ 16 q · Pr[Find]`
-* `o2h_extraction_of_QAdv` — the weaker squared form `≤ (4q)² · Pr[Find]`,
-  comparable to `Quantum.O2H.O2HExtraction`
+* `o2h_extraction_of_QAdv` — the weaker squared form `≤ (4q)² · Pr[Find]`
 * `o2h_semiclassical_mixed` — `o2h_semiclassical` for an arbitrary initial
   density matrix
 
@@ -709,8 +708,8 @@ theorem o2h_sq (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     _ = 16 * (q : ℝ≥0∞) * prFind A H S := by rw [mul_pow, hsq, ← mul_assoc]; norm_num
 
 /-- The weaker squared form `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ (4q)² · Pr[Find]`
-    of `o2h_sq`, the shape of `Quantum.O2H.O2HExtraction` with constant `4q` in place of
-    `2q`. -/
+    of `o2h_sq`, with the constant written as the square `(4q)²`; it follows from `o2h_sq`
+    since `q ≤ q²` for a natural number `q`. -/
 theorem o2h_extraction_of_QAdv (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
     (hpure : A.init.val = vecMulVec ψ (star ψ)) :
