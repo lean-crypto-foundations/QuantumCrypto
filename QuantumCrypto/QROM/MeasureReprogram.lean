@@ -10,16 +10,21 @@ public import QuantumCrypto.QROM.O2HTheorem
 /-!
 # Measure-and-reprogram for a `q`-query adversary
 
-The measure-and-reprogram bound of Don, Fehr, Majenz and Schaffner (CRYPTO 2019,
-Theorem 2, single reprogrammed point) for an arbitrary adversary `QAdv m n w q`,
-oracle `H : Fin m → Fin n`, point `x₀` and value `θ`. The simulator picks a
-slot `(i, b)` among the `2q + 1` slots `Option (Fin q × Bool)`; it runs the
-adversary against `H` up to query `i`, measures the query register to obtain
-`x`, and continues with the reprogrammed oracle `H[x ↦ θ]` from query `i`
-(`b = false`) or from query `i + 1` (`b = true`); the slot `none` measures the
-query register after the last unitary. The adversary's output is read by
-measuring its query register (the output `x'`) and then its final projector,
-which plays the predicate `V(x₀, θ, ·)`.
+The measure-and-reprogram inequality of Don, Fehr and Majenz (Measure-and-Reprogram
+2.0, CRYPTO 2020, Lemma 1) for an arbitrary adversary `QAdv m n w q`, whose initial
+state may be mixed, and a fixed oracle `H : Fin m → Fin n`, point `x₀` and value
+`θ`. The simulator picks a slot `(i, b)` among the `2q + 1` slots
+`Option (Fin q × Bool)`; it runs the adversary against `H` up to query `i`,
+measures the query register to obtain `x`, and continues with the reprogrammed
+oracle `H[x ↦ θ]` from query `i` (`b = false`) or from query `i + 1`
+(`b = true`); the slot `none` measures the query register after the last
+unitary. The adversary's output is read by measuring its query register (the
+output `x'`) and then its final projector, which plays the projection `Π_{x₀,θ}`
+of the paper.
+
+The paper's Theorem 2, which draws `H` and `θ` uniformly at random, lets the
+predicate depend on `θ`, and packages the inequality as a black-box simulator
+with a running-time bound, is not formalized here.
 
 ## Main definitions
 
@@ -52,8 +57,11 @@ which plays the predicate `V(x₀, θ, ·)`.
 
 ## References
 
+* [Don, Fehr, Majenz — The Measure-and-Reprogram Technique 2.0: Multi-Round
+  Fiat-Shamir and More, CRYPTO 2020, arXiv 2003.05207], Lemma 1
 * [Don, Fehr, Majenz, Schaffner — Security of the Fiat-Shamir Transformation in
-  the Quantum Random-Oracle Model, CRYPTO 2019], Theorem 2
+  the Quantum Random-Oracle Model, CRYPTO 2019] — the earlier form, with
+  `2(q + 1)` slots, the factor `1 / (2(q + 1)(2q + 3))` and an additive error
 -/
 
 @[expose] public section
@@ -439,12 +447,14 @@ theorem prTrue_Q_eq_sum_nrm_sq {d : ℕ} (I : QComp d Bool) (ρ₀ : DensityMatr
   unfold prTrue_Q
   rw [hI, hρ, trace_mul_sum_vecMulVec_mul_conjTranspose, Complex.ofReal_re]
 
-/-- Measure-and-reprogram (Don–Fehr–Majenz–Schaffner, CRYPTO 2019, Theorem 2,
-    single reprogrammed point): for every `q`-query adversary `A`, oracle `H`,
-    point `x₀` and value `θ`, the simulator with a uniform slot among the
-    `2q + 1` slots measures `x₀`, and the adversary run against the reprogrammed
-    oracle outputs `x₀` and accepts, with probability at least
-    `Pr[x' = x₀ ∧ accept : A^{H[x₀ ↦ θ]}] / (2q + 1)²`. -/
+/-- Measure-and-reprogram for a fixed oracle (Don–Fehr–Majenz, Measure-and-Reprogram
+    2.0, CRYPTO 2020, Lemma 1): for every `q`-query adversary `A`, oracle `H`,
+    point `x₀` and value `θ`, with the slot drawn uniformly from the `2q + 1`
+    slots, the probability that the simulator measures `x₀`, the adversary's
+    output `x'` (after the simulator's run, which uses `H` before the slot) is
+    `x₀`, and the final projector accepts is at least
+    `Pr[x' = x₀ ∧ accept : A^{H[x₀ ↦ θ]}] / (2q + 1)²`. The averaging over a
+    random `H` and `θ` of the paper's Theorem 2 is not part of this statement. -/
 theorem measure_reprogram (A : QAdv m n w q) (H : Fin m → Fin n) (x₀ : Fin m) (θ : Fin n) :
     prOutAt A (Function.update H x₀ θ) x₀ / ((2 * q + 1 : ℕ) : ℝ≥0∞) ^ 2 ≤ prMR A H θ x₀ := by
   obtain ⟨ψ, hρ⟩ := exists_eq_sum_vecMulVec_of_posSemidef A.init.psd
