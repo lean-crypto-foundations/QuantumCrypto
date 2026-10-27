@@ -35,7 +35,7 @@ queries into a sum of projected intermediate states, whose squared norms sum to
 
 ## Main results
 
-* `run_branch_true_pure`, `prOut_eq_nrm_sq` — the standard run on a pure
+* `run_branch_true`, `prOut_eq_nrm_sq` — the standard run on a pure
   state, as a rank-one state and as a squared norm
 * `scChain_branch_false_eq`, `prOutNoFind_eq_nrm_sq` — the `Find = false`
   branch of the semi-classical run, as a rank-one state and as a squared norm
@@ -47,16 +47,22 @@ queries into a sum of projected intermediate states, whose squared norms sum to
 * `o2h_semiclassical` — `|Pr[out = 1 : H] − Pr[out = 1 ∧ ¬Find : H \ S]| ≤ 2 √(q · Pr[Find])`
 * `o2h` — `|Pr[out = 1 : H] − Pr[out = 1 : H']| ≤ 4 √(q · Pr[Find])` for `H`,
   `H'` agreeing outside `S`
-* `o2h_extraction_of_QAdv` — the squared form `≤ (4q)² · Pr[Find]`, comparable
-  to `Quantum.O2H.O2HExtraction`
+* `o2h_sq` — the squared form `≤ 16 q · Pr[Find]`
+* `o2h_extraction_of_QAdv` — the weaker squared form `≤ (4q)² · Pr[Find]`
+* `o2h_semiclassical_mixed` — `o2h_semiclassical` for an arbitrary initial
+  density matrix
 
 ## The adversary class and the constants
 
-The adversary has a pure initial state (`A.init = ψψ†`), applies the oracle `q`
-times between `q + 1` unitaries, and ends with one projective measurement. The
-bounds are `2√(q · P_find)` against the `Find = false` branch and
-`4√(q · P_find)` between two functions. Since `q` counts oracle applications,
-these are at least as tight as the `d + 1` form of Ambainis–Hamburg–Unruh.
+The adversary applies the oracle `q` times between `q + 1` unitaries and ends
+with one projective measurement, so its query depth `d` is `q`. The bounds are
+`2√(q · P_find)` against the `Find = false` branch and `4√(q · P_find)`
+between two functions. Ambainis–Hamburg–Unruh prove `√((d + 1) · P_find)` and
+`2√((d + 1) · P_find)` respectively. At `d = q` the bounds here are weaker by
+the factor `2√(q / (q + 1))`, which lies in `[√2, 2)` for `q ≥ 1`; squared,
+`16 q · P_find` against the paper's `4 (q + 1) · P_find`.
+`o2h_semiclassical`, `o2h`, `o2h_sq` and `o2h_extraction_of_QAdv` assume a pure
+initial state `A.init = ψψ†`; `o2h_semiclassical_mixed` does not.
 
 ## References
 
@@ -634,10 +640,10 @@ theorem ofReal_two_mul_sqrt {F : ℝ} (hF : 0 ≤ F) :
     `|Pr[out = 1 : A^H] − Pr[out = 1 ∧ ¬Find : A^{H \ S}]| ≤ 2 √(q · Pr[Find])`.
 
     References: Ambainis, Hamburg, Unruh, "Quantum security proofs using
-    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1. The
-    paper's constant is the query depth; the constant here is the number of
-    queries `q`, which coincides with the depth for the sequential adversary
-    `QAdv`. -/
+    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1, which
+    has the bound `√((d + 1) · Pr[Find])` for query depth `d`. For the
+    sequential adversary `QAdv` the depth is `q`, and for `q ≥ 1` the bound here is
+    weaker by the factor `2√(q / (q + 1))` (at `q = 0` both bounds vanish). -/
 theorem o2h_semiclassical (A : QAdv m n w q) (H : Fin m → Fin n) (S : Finset (Fin m))
     {ψ : Fin (m * n * w) → ℂ} (hpure : A.init.val = vecMulVec ψ (star ψ)) :
     absDiff (prOut A H) (prOutNoFind A H S) ≤
@@ -667,10 +673,10 @@ theorem prFind_congr (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fi
     `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]| ≤ 4 √(q · Pr[Find])`.
 
     References: Ambainis, Hamburg, Unruh, "Quantum security proofs using
-    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1 (the
-    two-function form, obtained from `o2h_semiclassical` applied to `H` and
-    `H'`); the constant `q` is the query count in place of the paper's query
-    depth. -/
+    semi-classical oracles", CRYPTO 2019, ePrint 2018/904, Theorem 1, which
+    has the bound `2√((d + 1) · Pr[Find])` for query depth `d`. The bound here
+    is obtained from `o2h_semiclassical` applied to `H` and `H'`; at `d = q ≥ 1` it
+    is weaker by the factor `2√(q / (q + 1))`. -/
 theorem o2h (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
     (hpure : A.init.val = vecMulVec ψ (star ψ)) :
@@ -687,18 +693,30 @@ theorem o2h (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     _ = 4 * ((q : ℝ≥0∞) * prFind A H S) ^ (1 / 2 : ℝ) := by
         rw [← prFind_congr A H H' S hHH' hpure]; ring
 
-/-- The squared form of `o2h`: `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ (4q)² · Pr[Find]`,
-    the shape of `Quantum.O2H.O2HExtraction` with constant `4q` in place of `2q`. -/
-theorem o2h_extraction_of_QAdv (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
+/-- The squared form of `o2h`: `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ 16 q · Pr[Find]`.
+    Ambainis–Hamburg–Unruh's two-function bound squares to `4 (q + 1) · Pr[Find]` at
+    query depth `q`. -/
+theorem o2h_sq (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
     (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
     (hpure : A.init.val = vecMulVec ψ (star ψ)) :
-    absDiff (prOut A H) (prOut A H') ^ 2 ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFind A H S := by
+    absDiff (prOut A H) (prOut A H') ^ 2 ≤ 16 * (q : ℝ≥0∞) * prFind A H S := by
   have h := o2h A H H' S hHH' hpure
   have hsq : (((q : ℝ≥0∞) * prFind A H S) ^ (1 / 2 : ℝ)) ^ 2 = (q : ℝ≥0∞) * prFind A H S := by
     rw [← ENNReal.rpow_natCast, ← ENNReal.rpow_mul]; norm_num
   calc absDiff (prOut A H) (prOut A H') ^ 2
       ≤ (4 * ((q : ℝ≥0∞) * prFind A H S) ^ (1 / 2 : ℝ)) ^ 2 := pow_le_pow_left' h 2
-    _ = 4 ^ 2 * ((q : ℝ≥0∞) * prFind A H S) := by rw [mul_pow, hsq]
+    _ = 16 * (q : ℝ≥0∞) * prFind A H S := by rw [mul_pow, hsq, ← mul_assoc]; norm_num
+
+/-- The weaker squared form `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ (4q)² · Pr[Find]`
+    of `o2h_sq`, with the constant written as the square `(4q)²`; it follows from `o2h_sq`
+    since `q ≤ q²` for a natural number `q`. -/
+theorem o2h_extraction_of_QAdv (A : QAdv m n w q) (H H' : Fin m → Fin n) (S : Finset (Fin m))
+    (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
+    (hpure : A.init.val = vecMulVec ψ (star ψ)) :
+    absDiff (prOut A H) (prOut A H') ^ 2 ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFind A H S := by
+  calc absDiff (prOut A H) (prOut A H') ^ 2
+      ≤ 16 * (q : ℝ≥0∞) * prFind A H S := o2h_sq A H H' S hHH' hpure
+    _ = 4 ^ 2 * ((q : ℝ≥0∞) * prFind A H S) := by rw [← mul_assoc]; norm_num
     _ ≤ (4 * (q : ℝ≥0∞)) ^ 2 * prFind A H S := by
         rcases Nat.eq_zero_or_pos q with hq | hq
         · subst hq; simp

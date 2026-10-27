@@ -62,7 +62,7 @@ per-function unitary `oracleU m n w H`, on one query register `Fin m × Fin n`
 and one work register `Fin w`. A `QAdv m n w q` alternates `q + 1` unitaries
 with `q` oracle calls and produces a classical output by one final projective
 measurement; its initial state is a field of the adversary. The O2H bound of
-`Quantum/QROM/O2HTheorem.lean` is proved from the run-level identities of this
+`QuantumCrypto.QROM.O2HTheorem` is proved from the run-level identities of this
 module.
 
 ## References

@@ -48,8 +48,8 @@ ancilla that records the outcome, so a multi-round adversary is a single-run
 * `prOutMR_eq`, `prFindMR_eq`, `prOutNoFindMR_eq` — the probabilities of output,
   Find, and output without Find of a multi-round adversary are those of its `toQAdv`
 * `pure_toQAdv` — a rank-one initial state stays rank one
-* `o2h_MR`, `o2h_extraction_MR` — the one-way-to-hiding bound for multi-round
-  adversaries, with the query count of `toQAdv`
+* `o2h_MR`, `o2h_sq_MR`, `o2h_extraction_MR` — the one-way-to-hiding bound for
+  multi-round adversaries and its squared forms, with the query count of `toQAdv`
 
 ## The model
 
@@ -1189,6 +1189,18 @@ theorem o2h_MR (A : QAdvMR m n w q k c a) (f : Fin c → Fin a) (H H' : Fin m �
   exact o2h (toQAdv A f) H H' S hHH' hψ'
 
 /-- The squared form of `o2h_MR`:
+    `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ 16 q' · Pr[Find]` with
+    `q' = flatQ q k q = (k + 1) q` the query count of `toQAdv`. -/
+theorem o2h_sq_MR (A : QAdvMR m n w q k c a) (f : Fin c → Fin a) (H H' : Fin m → Fin n)
+    (S : Finset (Fin m)) (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
+    (hpure : A.init.val = vecMulVec ψ (star ψ)) :
+    absDiff (prOutMR A H f) (prOutMR A H' f) ^ 2 ≤
+      16 * (flatQ q k q : ℝ≥0∞) * prFindMR A H f S := by
+  obtain ⟨ψ', hψ'⟩ := pure_toQAdv A f hpure
+  rw [prOutMR_eq, prOutMR_eq, prFindMR_eq]
+  exact o2h_sq (toQAdv A f) H H' S hHH' hψ'
+
+/-- The weaker squared form of `o2h_MR`:
     `|Pr[out = 1 : A^H] − Pr[out = 1 : A^{H'}]|² ≤ (4 q')² · Pr[Find]`. -/
 theorem o2h_extraction_MR (A : QAdvMR m n w q k c a) (f : Fin c → Fin a) (H H' : Fin m → Fin n)
     (S : Finset (Fin m)) (hHH' : ∀ x, x ∉ S → H x = H' x) {ψ : Fin (m * n * w) → ℂ}
