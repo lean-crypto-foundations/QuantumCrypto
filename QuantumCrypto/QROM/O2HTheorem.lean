@@ -24,7 +24,7 @@ queries into a sum of projected intermediate states, whose squared norms sum to
 
 ## Main definitions
 
-* `nrm v` — the Euclidean norm of `v : Fin d → ℂ`, through `EuclideanSpace`
+* `nrm v` — the Euclidean norm of `v : d → ℂ`, through `EuclideanSpace`
 * `chainOp O q U` — the operator `U_q O U_{q-1} ⋯ O U_0` of `oracleChain`
 * `scStates O' Π q U ψ` — the states before each query of the chain with the
   projected oracle `O'`, from the initial vector `ψ`
@@ -77,71 +77,71 @@ noncomputable section
 
 namespace Quantum.QROM
 
-/-! ## The Euclidean norm on `Fin d → ℂ` -/
+/-! ## The Euclidean norm on `d → ℂ` -/
 
 section Norm
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d]
 
-/-- The Euclidean norm of a vector, through `EuclideanSpace ℂ (Fin d)`. -/
-def nrm (v : Fin d → ℂ) : ℝ := ‖(WithLp.toLp 2 v : EuclideanSpace ℂ (Fin d))‖
+/-- The Euclidean norm of a vector, through `EuclideanSpace ℂ d`. -/
+def nrm (v : d → ℂ) : ℝ := ‖(WithLp.toLp 2 v : EuclideanSpace ℂ d)‖
 
 /-- The norm is nonnegative. -/
-theorem nrm_nonneg (v : Fin d → ℂ) : 0 ≤ nrm v := norm_nonneg _
+theorem nrm_nonneg (v : d → ℂ) : 0 ≤ nrm v := norm_nonneg _
 
 /-- The norm of the zero vector is zero. -/
 @[simp]
-theorem nrm_zero : nrm (0 : Fin d → ℂ) = 0 := by
+theorem nrm_zero : nrm (0 : d → ℂ) = 0 := by
   simp [nrm]
 
 /-- The self pairing `v ⬝ᵥ star v` is the squared norm. -/
-theorem dotProduct_star_self (v : Fin d → ℂ) :
+theorem dotProduct_star_self (v : d → ℂ) :
     v ⬝ᵥ star v = ((nrm v ^ 2 : ℝ) : ℂ) := by
   rw [← EuclideanSpace.inner_toLp_toLp, inner_self_eq_norm_sq_to_K]
   push_cast
   rfl
 
 /-- Vectors with equal self pairings have equal norms. -/
-theorem nrm_eq_of_dotProduct_eq {v w : Fin d → ℂ} (h : v ⬝ᵥ star v = w ⬝ᵥ star w) :
+theorem nrm_eq_of_dotProduct_eq {v w : d → ℂ} (h : v ⬝ᵥ star v = w ⬝ᵥ star w) :
     nrm v = nrm w := by
   rw [dotProduct_star_self, dotProduct_star_self] at h
   exact (sq_eq_sq₀ (nrm_nonneg v) (nrm_nonneg w)).mp (by exact_mod_cast h)
 
 /-- The reverse triangle inequality `|‖a‖ − ‖b‖| ≤ ‖a − b‖`. -/
-theorem abs_nrm_sub_nrm_le (a b : Fin d → ℂ) : |nrm a - nrm b| ≤ nrm (a - b) := by
+theorem abs_nrm_sub_nrm_le (a b : d → ℂ) : |nrm a - nrm b| ≤ nrm (a - b) := by
   unfold nrm
   rw [WithLp.toLp_sub]
   exact abs_norm_sub_norm_le _ _
 
 /-- The triangle inequality. -/
-theorem nrm_add_le (a b : Fin d → ℂ) : nrm (a + b) ≤ nrm a + nrm b := by
+theorem nrm_add_le (a b : d → ℂ) : nrm (a + b) ≤ nrm a + nrm b := by
   unfold nrm
   rw [WithLp.toLp_add]
   exact norm_add_le _ _
 
 /-- `|‖a‖² − ‖b‖²| ≤ ‖a − b‖ (‖a‖ + ‖b‖)`. -/
-theorem abs_nrm_sq_sub_nrm_sq_le (a b : Fin d → ℂ) :
+theorem abs_nrm_sq_sub_nrm_sq_le (a b : d → ℂ) :
     |nrm a ^ 2 - nrm b ^ 2| ≤ nrm (a - b) * (nrm a + nrm b) := by
   rw [sq_sub_sq, abs_mul, abs_of_nonneg (add_nonneg (nrm_nonneg a) (nrm_nonneg b)), mul_comm]
   exact mul_le_mul_of_nonneg_right (abs_nrm_sub_nrm_le a b)
     (add_nonneg (nrm_nonneg a) (nrm_nonneg b))
 
 /-- The pairing of two images under matrices, pulled back to the argument. -/
-theorem mulVec_dotProduct_star_mulVec (A B : Matrix (Fin d) (Fin d) ℂ) (v : Fin d → ℂ) :
+theorem mulVec_dotProduct_star_mulVec (A B : Matrix d d ℂ) (v : d → ℂ) :
     (A *ᵥ v) ⬝ᵥ star (B *ᵥ v) = ((Bᴴ * A) *ᵥ v) ⬝ᵥ star v := by
   rw [star_mulVec, dotProduct_comm, dotProduct_mulVec, vecMul_vecMul, ← dotProduct_mulVec,
     dotProduct_comm]
 
 /-- A unitary preserves the norm. -/
-theorem nrm_mulVec_of_mem_unitaryGroup {U : Matrix (Fin d) (Fin d) ℂ}
-    (hU : U ∈ Matrix.unitaryGroup (Fin d) ℂ) (v : Fin d → ℂ) : nrm (U *ᵥ v) = nrm v := by
+theorem nrm_mulVec_of_mem_unitaryGroup [DecidableEq d] {U : Matrix d d ℂ}
+    (hU : U ∈ Matrix.unitaryGroup d ℂ) (v : d → ℂ) : nrm (U *ᵥ v) = nrm v := by
   apply nrm_eq_of_dotProduct_eq
   rw [mulVec_dotProduct_star_mulVec, ← star_eq_conjTranspose,
     Matrix.mem_unitaryGroup_iff'.mp hU, one_mulVec]
 
 /-- Pythagoras for an orthogonal projector: `‖Pv‖² + ‖(1 − P)v‖² = ‖v‖²`. -/
-theorem nrm_sq_proj_add_nrm_sq_one_sub_proj {P : Matrix (Fin d) (Fin d) ℂ}
-    (hI : P * P = P) (hH : Pᴴ = P) (v : Fin d → ℂ) :
+theorem nrm_sq_proj_add_nrm_sq_one_sub_proj [DecidableEq d] {P : Matrix d d ℂ}
+    (hI : P * P = P) (hH : Pᴴ = P) (v : d → ℂ) :
     nrm (P *ᵥ v) ^ 2 + nrm ((1 - P) *ᵥ v) ^ 2 = nrm v ^ 2 := by
   have h1 : (P *ᵥ v) ⬝ᵥ star (P *ᵥ v) = (P *ᵥ v) ⬝ᵥ star v := by
     rw [mulVec_dotProduct_star_mulVec, hH, hI]
@@ -157,8 +157,9 @@ theorem nrm_sq_proj_add_nrm_sq_one_sub_proj {P : Matrix (Fin d) (Fin d) ℂ}
   exact_mod_cast this
 
 /-- An orthogonal projector is a contraction. -/
-theorem nrm_proj_mulVec_le {P : Matrix (Fin d) (Fin d) ℂ}
-    (hI : P * P = P) (hH : Pᴴ = P) (v : Fin d → ℂ) : nrm (P *ᵥ v) ≤ nrm v := by
+theorem nrm_proj_mulVec_le {P : Matrix d d ℂ}
+    (hI : P * P = P) (hH : Pᴴ = P) (v : d → ℂ) : nrm (P *ᵥ v) ≤ nrm v := by
+  classical
   have h := nrm_sq_proj_add_nrm_sq_one_sub_proj hI hH v
   rw [← pow_le_pow_iff_left₀ (nrm_nonneg _) (nrm_nonneg _) two_ne_zero]
   nlinarith [sq_nonneg (nrm ((1 - P) *ᵥ v))]
@@ -174,25 +175,25 @@ theorem sum_le_sqrt_card_mul_sum_sq {ι : Type} [Fintype ι] (f : ι → ℝ)
   simpa [Finset.card_univ] using this
 
 /-- Conjugating a rank-one state by `X` is the rank-one state of `X ψ`. -/
-theorem mul_vecMulVec_star_mul_conjTranspose (X : Matrix (Fin d) (Fin d) ℂ) (ψ : Fin d → ℂ) :
+theorem mul_vecMulVec_star_mul_conjTranspose (X : Matrix d d ℂ) (ψ : d → ℂ) :
     X * vecMulVec ψ (star ψ) * Xᴴ = vecMulVec (X *ᵥ ψ) (star (X *ᵥ ψ)) := by
   rw [mul_vecMulVec, vecMulVec_mul, star_mulVec]
 
 /-- The trace of a conjugated rank-one state is the squared norm of `X ψ`. -/
-theorem trace_mul_vecMulVec_star_mul_conjTranspose (X : Matrix (Fin d) (Fin d) ℂ)
-    (ψ : Fin d → ℂ) :
+theorem trace_mul_vecMulVec_star_mul_conjTranspose (X : Matrix d d ℂ)
+    (ψ : d → ℂ) :
     (X * vecMulVec ψ (star ψ) * Xᴴ).trace = ((nrm (X *ᵥ ψ) ^ 2 : ℝ) : ℂ) := by
   rw [mul_vecMulVec_star_mul_conjTranspose, trace_vecMulVec, dotProduct_star_self]
 
 /-- Conjugation by a unitary preserves the trace. -/
-theorem trace_mul_mul_conjTranspose_of_mem_unitaryGroup {U : Matrix (Fin d) (Fin d) ℂ}
-    (hU : U ∈ Matrix.unitaryGroup (Fin d) ℂ) (X : Matrix (Fin d) (Fin d) ℂ) :
+theorem trace_mul_mul_conjTranspose_of_mem_unitaryGroup [DecidableEq d] {U : Matrix d d ℂ}
+    (hU : U ∈ Matrix.unitaryGroup d ℂ) (X : Matrix d d ℂ) :
     (U * X * Uᴴ).trace = X.trace := by
   rw [trace_mul_cycle, ← star_eq_conjTranspose, Matrix.mem_unitaryGroup_iff'.mp hU, one_mul]
 
 /-- `tr (P ρ P) = tr (P ρ)` for an idempotent `P`. -/
-theorem trace_proj_mul_mul_proj {P : Matrix (Fin d) (Fin d) ℂ} (hI : P * P = P)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) : (P * ρ * P).trace = (P * ρ).trace := by
+theorem trace_proj_mul_mul_proj {P : Matrix d d ℂ} (hI : P * P = P)
+    (ρ : Matrix d d ℂ) : (P * ρ * P).trace = (P * ρ).trace := by
   rw [trace_mul_cycle, hI]
 
 end Norm
@@ -201,15 +202,15 @@ end Norm
 
 section Branch
 
-variable {d : ℕ} {α β : Type}
+variable {d : Type*} [Fintype d] [DecidableEq d] {α β : Type}
 
 /-- The branch of a bind is the sum over the intermediate outcomes. -/
 theorem qbind_branch_apply (I : QComp d α) (f : α → QComp d β) (b : β)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (ρ : Matrix d d ℂ) :
     (QComp.qbind I f).branch b ρ = ∑' a, (f a).branch b (I.branch a ρ) := rfl
 
 /-- Post-composing with `qpure` leaves each branch unchanged. -/
-theorem qbind_qpure_branch (I : QComp d α) (b : α) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem qbind_qpure_branch (I : QComp d α) (b : α) (ρ : Matrix d d ℂ) :
     (QComp.qbind I fun a => QComp.qpure a).branch b ρ = I.branch b ρ := by
   rw [show (fun a => (QComp.qpure a : QComp d α)) = QComp.qpure from rfl, QComp.qbind_qpure]
 
@@ -219,24 +220,24 @@ end Branch
 
 section Chain
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-- The operator `U_q O U_{q-1} ⋯ O U_0` of `oracleChain`, for a matrix `O` in
     place of the oracle. -/
-def chainOp (O : Matrix (Fin d) (Fin d) ℂ) :
-    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) → Matrix (Fin d) (Fin d) ℂ
+def chainOp (O : Matrix d d ℂ) :
+    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup d ℂ) → Matrix d d ℂ
   | 0, U => U 0
   | q + 1, U => chainOp O q (Fin.tail U) * O * U 0
 
 /-- `chainOp` at `q + 1` applied to `ψ`: `U_0`, then `O`, then the chain of the tail. -/
-theorem chainOp_succ_mulVec (O : Matrix (Fin d) (Fin d) ℂ) (q : ℕ)
-    (U : Fin (q + 2) → Matrix.unitaryGroup (Fin d) ℂ) (ψ : Fin d → ℂ) :
+theorem chainOp_succ_mulVec (O : Matrix d d ℂ) (q : ℕ)
+    (U : Fin (q + 2) → Matrix.unitaryGroup d ℂ) (ψ : d → ℂ) :
     chainOp O (q + 1) U *ᵥ ψ = chainOp O q (Fin.tail U) *ᵥ (O *ᵥ ((U 0 : Matrix _ _ ℂ) *ᵥ ψ)) := by
   simp only [chainOp, mulVec_mulVec, Matrix.mul_assoc]
 
 /-- The `Unit` chain of a unitary channel is conjugation by `chainOp`. -/
-theorem oracleChain_unitaryChannel_branch (O : Matrix.unitaryGroup (Fin d) ℂ) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem oracleChain_unitaryChannel_branch (O : Matrix.unitaryGroup d ℂ) (q : ℕ)
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) (ρ : Matrix d d ℂ) :
     (oracleChain (unitaryChannel O) q U).branch () ρ =
       chainOp (O : Matrix _ _ ℂ) q U * ρ * (chainOp (O : Matrix _ _ ℂ) q U)ᴴ := by
   induction q generalizing ρ with
@@ -246,9 +247,9 @@ theorem oracleChain_unitaryChannel_branch (O : Matrix.unitaryGroup (Fin d) ℂ) 
       conjTranspose_mul, Matrix.mul_assoc]
 
 /-- A chain of contractions is a contraction. -/
-theorem nrm_chainOp_mulVec_le (O : Matrix (Fin d) (Fin d) ℂ)
-    (hO : ∀ v, nrm (O *ᵥ v) ≤ nrm v) (q : ℕ) (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
-    (ψ : Fin d → ℂ) : nrm (chainOp O q U *ᵥ ψ) ≤ nrm ψ := by
+theorem nrm_chainOp_mulVec_le (O : Matrix d d ℂ)
+    (hO : ∀ v, nrm (O *ᵥ v) ≤ nrm v) (q : ℕ) (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ)
+    (ψ : d → ℂ) : nrm (chainOp O q U *ᵥ ψ) ≤ nrm ψ := by
   induction q generalizing ψ with
   | zero => exact (nrm_mulVec_of_mem_unitaryGroup (U 0).prop ψ).le
   | succ q ih =>
@@ -257,9 +258,9 @@ theorem nrm_chainOp_mulVec_le (O : Matrix (Fin d) (Fin d) ℂ)
     exact (nrm_mulVec_of_mem_unitaryGroup (U 0).prop ψ).le
 
 /-- A chain of unitaries preserves the norm. -/
-theorem nrm_chainOp_mulVec_eq (O : Matrix (Fin d) (Fin d) ℂ)
-    (hO : ∀ v, nrm (O *ᵥ v) = nrm v) (q : ℕ) (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
-    (ψ : Fin d → ℂ) : nrm (chainOp O q U *ᵥ ψ) = nrm ψ := by
+theorem nrm_chainOp_mulVec_eq (O : Matrix d d ℂ)
+    (hO : ∀ v, nrm (O *ᵥ v) = nrm v) (q : ℕ) (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ)
+    (ψ : d → ℂ) : nrm (chainOp O q U *ᵥ ψ) = nrm ψ := by
   induction q generalizing ψ with
   | zero => exact nrm_mulVec_of_mem_unitaryGroup (U 0).prop ψ
   | succ q ih =>
@@ -267,8 +268,8 @@ theorem nrm_chainOp_mulVec_eq (O : Matrix (Fin d) (Fin d) ℂ)
 
 /-- The states before each query of the chain with the projected oracle `O'`:
     `θ₀ = U₀ ψ` and `θ_{i+1}` is the state of the tail chain from `O' θ₀`. -/
-def scStates (O' : Matrix (Fin d) (Fin d) ℂ) :
-    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) → (Fin d → ℂ) → Fin q → (Fin d → ℂ)
+def scStates (O' : Matrix d d ℂ) :
+    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup d ℂ) → (d → ℂ) → Fin q → (d → ℂ)
   | 0, _, _ => fun i => i.elim0
   | q + 1, U, ψ =>
     Fin.cons ((U 0 : Matrix _ _ ℂ) *ᵥ ψ)
@@ -277,9 +278,9 @@ def scStates (O' : Matrix (Fin d) (Fin d) ℂ) :
 /-- Norm bookkeeping of the projected chain: the squared norm of the final
     state plus the squared norms of the projected intermediate states is the
     squared norm of the initial state. -/
-theorem nrm_sq_chainOp_add_sum_nrm_sq_scStates {O P : Matrix (Fin d) (Fin d) ℂ}
-    (hO : O ∈ Matrix.unitaryGroup (Fin d) ℂ) (hI : P * P = P) (hH : Pᴴ = P) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (ψ : Fin d → ℂ) :
+theorem nrm_sq_chainOp_add_sum_nrm_sq_scStates {O P : Matrix d d ℂ}
+    (hO : O ∈ Matrix.unitaryGroup d ℂ) (hI : P * P = P) (hH : Pᴴ = P) (q : ℕ)
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) (ψ : d → ℂ) :
     nrm (chainOp (O * (1 - P)) q U *ᵥ ψ) ^ 2 +
       ∑ i, nrm (P *ᵥ scStates (O * (1 - P)) q U ψ i) ^ 2 = nrm ψ ^ 2 := by
   induction q generalizing ψ with
@@ -301,9 +302,9 @@ theorem nrm_sq_chainOp_add_sum_nrm_sq_scStates {O P : Matrix (Fin d) (Fin d) ℂ
 /-- The telescoping bound: the difference between the standard and the
     projected chain on `ψ` is at most the sum of the norms of the projected
     intermediate states. -/
-theorem nrm_chainOp_sub_le {O : Matrix (Fin d) (Fin d) ℂ} (P : Matrix (Fin d) (Fin d) ℂ)
-    (hO : O ∈ Matrix.unitaryGroup (Fin d) ℂ) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (ψ : Fin d → ℂ) :
+theorem nrm_chainOp_sub_le {O : Matrix d d ℂ} (P : Matrix d d ℂ)
+    (hO : O ∈ Matrix.unitaryGroup d ℂ) (q : ℕ)
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) (ψ : d → ℂ) :
     nrm (chainOp O q U *ᵥ ψ - chainOp (O * (1 - P)) q U *ᵥ ψ) ≤
       ∑ i, nrm (P *ᵥ scStates (O * (1 - P)) q U ψ i) := by
   induction q generalizing ψ with
@@ -330,11 +331,11 @@ end Chain
 
 section TracePreserving
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-- The `true` branch of the semi-classical chain at `q + 1` queries, by the first query. -/
 theorem scChain_succ_branch_true (O : QComp d Bool) (q : ℕ)
-    (U : Fin (q + 2) → Matrix.unitaryGroup (Fin d) ℂ) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (U : Fin (q + 2) → Matrix.unitaryGroup d ℂ) (ρ : Matrix d d ℂ) :
     (scChain O (q + 1) U).branch true ρ =
       (scChain O q (Fin.tail U)).branch true
           (O.branch true ((U 0 : Matrix _ _ ℂ) * ρ * (U 0 : Matrix _ _ ℂ)ᴴ)) +
@@ -351,7 +352,7 @@ theorem scChain_succ_branch_true (O : QComp d Bool) (q : ℕ)
 /-- The `false` branch of the semi-classical chain at `q + 1` queries, by the first
     query. -/
 theorem scChain_succ_branch_false (O : QComp d Bool) (q : ℕ)
-    (U : Fin (q + 2) → Matrix.unitaryGroup (Fin d) ℂ) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (U : Fin (q + 2) → Matrix.unitaryGroup d ℂ) (ρ : Matrix d d ℂ) :
     (scChain O (q + 1) U).branch false ρ =
       (scChain O q (Fin.tail U)).branch false
         (O.branch false ((U 0 : Matrix _ _ ℂ) * ρ * (U 0 : Matrix _ _ ℂ)ᴴ)) := by
@@ -364,7 +365,7 @@ theorem scChain_succ_branch_false (O : QComp d Bool) (q : ℕ)
     preserving. -/
 theorem scChain_trace_add (O : QComp d Bool)
     (hO : ∀ σ, (O.branch true σ).trace + (O.branch false σ).trace = σ.trace) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) (ρ : Matrix d d ℂ) :
     ((scChain O q U).branch true ρ).trace + ((scChain O q U).branch false ρ).trace = ρ.trace := by
   induction q generalizing ρ with
   | zero =>
@@ -716,10 +717,11 @@ section O2HMixed
 
 /-- A positive semidefinite matrix is a sum of rank-one matrices `ψₖ ψₖ†`, with
     `ψₖ = √λₖ uₖ` for the eigenvalues `λₖ` and the unit eigenvectors `uₖ`. -/
-theorem exists_eq_sum_vecMulVec_of_posSemidef {d : ℕ} {ρ : Matrix (Fin d) (Fin d) ℂ}
-    (hρ : ρ.PosSemidef) :
-    ∃ ψ : Fin d → Fin d → ℂ, ρ = ∑ k, vecMulVec (ψ k) (star (ψ k)) := by
-  set U : Matrix (Fin d) (Fin d) ℂ := ↑hρ.isHermitian.eigenvectorUnitary
+theorem exists_eq_sum_vecMulVec_of_posSemidef {d : Type*} [Fintype d]
+    {ρ : Matrix d d ℂ} (hρ : ρ.PosSemidef) :
+    ∃ ψ : d → d → ℂ, ρ = ∑ k, vecMulVec (ψ k) (star (ψ k)) := by
+  classical
+  set U : Matrix d d ℂ := ↑hρ.isHermitian.eigenvectorUnitary
   set ev := hρ.isHermitian.eigenvalues
   have hs : ρ = U * diagonal (Complex.ofReal ∘ ev) * star U := by
     have hs := hρ.isHermitian.spectral_theorem
@@ -739,8 +741,8 @@ theorem exists_eq_sum_vecMulVec_of_posSemidef {d : ℕ} {ρ : Matrix (Fin d) (Fi
 
 /-- The trace of a conjugated sum of rank-one matrices is the sum of the
     squared norms of the images. -/
-theorem trace_mul_sum_vecMulVec_mul_conjTranspose {d : ℕ} {ι : Type} [Fintype ι]
-    (X : Matrix (Fin d) (Fin d) ℂ) (ψ : ι → Fin d → ℂ) :
+theorem trace_mul_sum_vecMulVec_mul_conjTranspose {d : Type*} [Fintype d] {ι : Type} [Fintype ι]
+    (X : Matrix d d ℂ) (ψ : ι → d → ℂ) :
     (X * (∑ k, vecMulVec (ψ k) (star (ψ k))) * Xᴴ).trace =
       ((∑ k, nrm (X *ᵥ ψ k) ^ 2 : ℝ) : ℂ) := by
   rw [Finset.mul_sum, Finset.sum_mul, trace_sum, Complex.ofReal_sum]

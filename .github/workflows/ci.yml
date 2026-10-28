@@ -16,9 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # QuantumFoundations is a path dependency (../QuantumFoundations); until its pull
-      # requests #1-#4 are merged, the modules used here are on the branch min-entropy.
+      # request #15 is merged, the finite-type index is on the branch fintype-index.
       - name: QuantumFoundations beside the checkout
-        run: git clone --depth 1 --branch min-entropy
+        run: git clone --depth 1 --branch fintype-index
           https://github.com/lean-crypto-foundations/QuantumFoundations ../QuantumFoundations
       - uses: leanprover/lean-action@v1
         with:

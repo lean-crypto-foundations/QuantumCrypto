@@ -165,7 +165,7 @@ def oracleRegU : Matrix.unitaryGroup (Fin (m * n * w * n ^ m)) ℂ :=
         (Matrix.mem_unitaryGroup_iff.mpr (by simp))) _⟩
 
 /-- The register oracle as a unitary channel on the total register. -/
-def oracleRegQ : QComp (m * n * w * n ^ m) Unit :=
+def oracleRegQ : QComp (Fin (m * n * w * n ^ m)) Unit :=
   unitaryChannel (oracleRegU m n w)
 
 /-- The projector `|G⟩⟨G|` on the table register. -/
@@ -326,12 +326,12 @@ theorem QAdv.finalReg_mul_self (A : QAdv m n w q) : A.finalReg * A.finalReg = A.
   rw [QAdv.finalReg, kronecker_mul_kronecker, A.final_mul_self, Matrix.mul_one]
 
 /-- The final measurement of `A` on the total register. -/
-def QAdv.measureReg (A : QAdv m n w q) : QComp (m * n * w * n ^ m) Bool :=
+def QAdv.measureReg (A : QAdv m n w q) : QComp (Fin (m * n * w * n ^ m)) Bool :=
   measProj A.finalReg A.finalReg_conjTranspose A.finalReg_mul_self
 
 /-- The run of `A` against the register oracle:
     `U₀ ⊗ 1 ; O_reg ; U₁ ⊗ 1 ; … ; O_reg ; U_q ⊗ 1 ; measure (final ⊗ 1)`. -/
-def runReg (A : QAdv m n w q) : QComp (m * n * w * n ^ m) Bool :=
+def runReg (A : QAdv m n w q) : QComp (Fin (m * n * w * n ^ m)) Bool :=
   QComp.qbind (oracleChain (oracleRegQ m n w) q (fun i => tableLiftU (n ^ m) (A.U i)))
     fun _ => A.measureReg
 
@@ -368,7 +368,7 @@ theorem tableMix_trace : (tableMix (n := n) m).trace = 1 := by
   exact inv_mul_cancel₀ (pow_ne_zero _ (Nat.cast_ne_zero.mpr (NeZero.ne n)))
 
 /-- The initial state of the register run: `A.init ⊗ₖ tableMix`. -/
-def initReg (A : QAdv m n w q) : DensityMatrix (m * n * w * n ^ m) :=
+def initReg (A : QAdv m n w q) : DensityMatrix (Fin (m * n * w * n ^ m)) :=
   ⟨A.init.val ⊗ₖ tableMix m n, QHL.kronecker_posSemidef A.init.psd tableMix_posSemidef, by
     rw [TensorProduct.trace_kronecker, A.init.tr_one, tableMix_trace, one_mul]⟩
 
