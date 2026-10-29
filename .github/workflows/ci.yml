@@ -16,9 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       # QuantumFoundations is a path dependency (../QuantumFoundations); until its pull
-      # request #15 is merged, the finite-type index is on the branch fintype-index.
+      # requests #15 and #17 are merged, this branch builds against bridge-instrument.
       - name: QuantumFoundations beside the checkout
-        run: git clone --depth 1 --branch fintype-index
+        run: git clone --depth 1 --branch bridge-instrument
           https://github.com/lean-crypto-foundations/QuantumFoundations ../QuantumFoundations
       - uses: leanprover/lean-action@v1
         with:
