@@ -296,7 +296,7 @@ theorem scOracleQ_branch_true (H : Fin m → Fin n) (S : Finset (Fin m))
   unfold scOracleQ
   rw [qbind_bool_branch, qbind_unit_branch, qbind_unit_branch, qpure_branch_apply,
     qpure_branch_apply, measProj_branch_true, measProj_branch_false, projS_conjTranspose]
-  simp [oracleQ, unitaryChannel_branch_apply]
+  simp [oracleQ]
 
 /-- The `false` branch of the semi-classical oracle: project onto the complement of
     `S`, then query. -/
@@ -309,7 +309,7 @@ theorem scOracleQ_branch_false (H : Fin m → Fin n) (S : Finset (Fin m))
   rw [qbind_bool_branch, qbind_unit_branch, qbind_unit_branch, qpure_branch_apply,
     qpure_branch_apply, measProj_branch_true, measProj_branch_false, conjTranspose_sub,
     conjTranspose_one, projS_conjTranspose]
-  simp [oracleQ, unitaryChannel_branch_apply]
+  simp [oracleQ]
 
 /-- At `S = ∅` the semi-classical oracle is the standard oracle with outcome
     `false`. -/
