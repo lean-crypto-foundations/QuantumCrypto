@@ -160,9 +160,8 @@ theorem nrm_sq_proj_add_nrm_sq_one_sub_proj [DecidableEq d] {P : Matrix d d ℂ}
 theorem nrm_proj_mulVec_le {P : Matrix d d ℂ}
     (hI : P * P = P) (hH : Pᴴ = P) (v : d → ℂ) : nrm (P *ᵥ v) ≤ nrm v := by
   classical
-  have h := nrm_sq_proj_add_nrm_sq_one_sub_proj hI hH v
-  rw [← pow_le_pow_iff_left₀ (nrm_nonneg _) (nrm_nonneg _) two_ne_zero]
-  nlinarith [sq_nonneg (nrm ((1 - P) *ᵥ v))]
+  nlinarith [nrm_sq_proj_add_nrm_sq_one_sub_proj hI hH v, nrm_nonneg (P *ᵥ v), nrm_nonneg v,
+    sq_nonneg (nrm ((1 - P) *ᵥ v))]
 
 /-- Cauchy–Schwarz for a finite sum of non-negative reals:
     `∑ f ≤ √(card · ∑ f²)`. -/
