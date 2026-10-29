@@ -201,7 +201,7 @@ end Norm
 
 section Branch
 
-variable {d : Type*} [Fintype d] [DecidableEq d] {α β : Type}
+variable {d : Type*} [Fintype d] {α β : Type}
 
 /-- The branch of a bind is the sum over the intermediate outcomes. -/
 theorem qbind_branch_apply (I : QComp d α) (f : α → QComp d β) (b : β)

@@ -88,7 +88,7 @@ namespace Quantum.QROM
 
 section Branch
 
-variable {d : Type*} [Fintype d] [DecidableEq d] {α β : Type}
+variable {d : Type*} [Fintype d] {α β : Type}
 
 open Classical in
 /-- The branch of `qpure a` is the identity at `a` and zero elsewhere. -/
@@ -122,7 +122,7 @@ theorem qbind_qpure_branch_of_ne (I : QComp d α) (g : α → β) (b : β)
   simp only [qpure_branch_apply, hb, ite_false, tsum_zero]
 
 /-- The branch of a unitary channel is conjugation by the unitary. -/
-theorem unitaryChannel_branch_apply (U : Matrix.unitaryGroup d ℂ)
+theorem unitaryChannel_branch_apply [DecidableEq d] (U : Matrix.unitaryGroup d ℂ)
     (ρ : Matrix d d ℂ) :
     (unitaryChannel U).branch () ρ = (U : Matrix d d ℂ) * ρ * (U : Matrix _ _ ℂ)ᴴ :=
   rfl

@@ -72,7 +72,7 @@ namespace Quantum.QROM
 
 section Single
 
-variable {d : Type*} [Fintype d] [DecidableEq d] {α β : Type}
+variable {d : Type*} [Fintype d] {α β : Type}
 
 /-- A bind whose continuation has a zero branch at `b` on every outcome other
     than `a₀` has the branch of the single outcome `a₀`. -/
@@ -432,7 +432,7 @@ theorem oracleU_update_eq (H : Fin m → Fin n) (x₀ : Fin m) (θ : Fin n) :
 
 /-- The probability of an output branch conjugated by `Y` at the initial state
     `∑ₖ ψₖ ψₖ†` is the sum of the squared norms of `Y ψₖ`. -/
-theorem prTrue_Q_eq_sum_nrm_sq {d : Type*} [Fintype d] [DecidableEq d]
+theorem prTrue_Q_eq_sum_nrm_sq {d : Type*} [Fintype d]
     (I : QComp d Bool) (ρ₀ : DensityMatrix d)
     (Y : Matrix d d ℂ) (hI : ∀ σ, I.branch true σ = Y * σ * Yᴴ)
     {ι : Type} [Fintype ι] (ψ : ι → d → ℂ) (hρ : ρ₀.val = ∑ k, vecMulVec (ψ k) (star (ψ k))) :
