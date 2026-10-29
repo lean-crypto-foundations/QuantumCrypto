@@ -80,19 +80,19 @@ namespace Quantum.QROM
 
 section Single
 
-variable {d : ℕ} {α β : Type}
+variable {d : Type*} [Fintype d] {α β : Type}
 
 /-- A bind whose continuation has a zero branch at `b` on every outcome other
     than `a₀` has the branch of the single outcome `a₀`. -/
 theorem qbind_branch_of_single (I : QComp d α) (f : α → QComp d β) (b : β) (a₀ : α)
-    (h : ∀ a, a ≠ a₀ → (f a).branch b = 0) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (h : ∀ a, a ≠ a₀ → (f a).branch b = 0) (ρ : Matrix d d ℂ) :
     (QComp.qbind I f).branch b ρ = (f a₀).branch b (I.branch a₀ ρ) := by
   rw [qbind_branch_apply]
   exact tsum_eq_single a₀ fun a ha => by rw [h a ha, LinearMap.zero_apply]
 
 /-- The `true` branch of the event `o = o₀` is the branch of `o₀`. -/
 theorem qbind_decide_eq_branch_true [DecidableEq α] (I : QComp d α) (o₀ : α)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (ρ : Matrix d d ℂ) :
     (QComp.qbind I fun o => QComp.qpure (decide (o = o₀))).branch true ρ = I.branch o₀ ρ := by
   rw [qbind_branch_of_single I _ true o₀]
   · rw [qpure_branch_apply]; simp
@@ -118,7 +118,7 @@ theorem sum_projS_singleton : ∑ x : Fin m, projS m n w {x} = 1 := by
   · simp [h]
 
 /-- The measurement of the query register's first factor, with outcomes `Fin m`. -/
-def measXOps : ProjectiveMeasurement (m * n * w) (Fin m) where
+def measXOps : ProjectiveMeasurement (Fin (m * n * w)) (Fin m) where
   op x := projS m n w {x}
   completeness := by
     simp only [projS_conjTranspose, projS_mul_self]
@@ -127,7 +127,7 @@ def measXOps : ProjectiveMeasurement (m * n * w) (Fin m) where
   idempotent x := projS_mul_self m n w {x}
 
 /-- The measurement of the query register's first factor as an instrument. -/
-def measX : QComp (m * n * w) (Fin m) := projectiveMeasure (measXOps m n w)
+def measX : QComp (Fin (m * n * w)) (Fin m) := projectiveMeasure (measXOps m n w)
 
 /-- The branch of `measX` at `x` is the projection onto the query input `x`. -/
 theorem measX_branch (x : Fin m) (ρ : Matrix (Fin (m * n * w)) (Fin (m * n * w)) ℂ) :
@@ -139,12 +139,12 @@ end MeasX
 
 section MeasChain
 
-variable {d : ℕ} {α : Type}
+variable {d : Type*} [Fintype d] [DecidableEq d] {α : Type}
 
 /-- `U₀ ; O ; ⋯ ; O ; U_j ; M ; R a ; U_{j+1} ; G a ; ⋯ ; G a ; U_q`, returning the
     outcome `a` of the instrument `M`. For `j ≥ q` the instrument follows `U_q`. -/
 def measChain (O : QComp d Unit) (M : QComp d α) (G R : α → QComp d Unit) :
-    (j q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) → QComp d α
+    (j q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup d ℂ) → QComp d α
   | 0, 0, U => QComp.qbind (unitaryChannel (U 0)) fun _ => M
   | 0, q + 1, U => QComp.qbind (unitaryChannel (U 0)) fun _ => QComp.qbind M fun a =>
       QComp.qbind (R a) fun _ =>
@@ -155,8 +155,8 @@ def measChain (O : QComp d Unit) (M : QComp d α) (G R : α → QComp d Unit) :
 
 /-- The operator of `measChain` on one outcome: `o` before the measurement,
     the projector `P` after `U_j`, `r` at query `j` and `g` after it. -/
-def simOp (o g r P : Matrix (Fin d) (Fin d) ℂ) :
-    (j q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) → Matrix (Fin d) (Fin d) ℂ
+def simOp (o g r P : Matrix d d ℂ) :
+    (j q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup d ℂ) → Matrix d d ℂ
   | 0, 0, U => P * U 0
   | 0, q + 1, U => chainOp g q (Fin.tail U) * r * P * U 0
   | _ + 1, 0, U => P * U 0
@@ -164,11 +164,11 @@ def simOp (o g r P : Matrix (Fin d) (Fin d) ℂ) :
 
 /-- The branch of `measChain` with unitary oracles and a measurement with
     operators `Pm a` is conjugation by `simOp`. -/
-theorem measChain_branch (o : Matrix.unitaryGroup (Fin d) ℂ) (M : QComp d α)
-    (Pm : α → Matrix (Fin d) (Fin d) ℂ)
+theorem measChain_branch (o : Matrix.unitaryGroup d ℂ) (M : QComp d α)
+    (Pm : α → Matrix d d ℂ)
     (hM : ∀ a σ, M.branch a σ = Pm a * σ * (Pm a)ᴴ)
-    (g r : α → Matrix.unitaryGroup (Fin d) ℂ) (j q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (a : α) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (g r : α → Matrix.unitaryGroup d ℂ) (j q : ℕ)
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) (a : α) (ρ : Matrix d d ℂ) :
     (measChain (unitaryChannel o) M (fun a => unitaryChannel (g a))
         (fun a => unitaryChannel (r a)) j q U).branch a ρ =
       simOp (o : Matrix _ _ ℂ) (g a) (r a) (Pm a) j q U * ρ *
@@ -199,8 +199,8 @@ theorem measChain_branch (o : Matrix.unitaryGroup (Fin d) ℂ) (M : QComp d α)
 
 /-- At the last slot the operator of `measChain` is the projector after the
     chain of `o`. -/
-theorem simOp_self (o g r P : Matrix (Fin d) (Fin d) ℂ) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) :
+theorem simOp_self (o g r P : Matrix d d ℂ) (q : ℕ)
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) :
     simOp o g r P q q U = P * chainOp o q U := by
   induction q with
   | zero => rfl
@@ -209,14 +209,14 @@ theorem simOp_self (o g r P : Matrix (Fin d) (Fin d) ℂ) (q : ℕ)
 /-- The telescoping identity: with `g = o + g P − o P`, the chain of `g` is the
     chain of `o` plus, for each query `i`, the operator with the measurement
     before query `i` and `g` at query `i`, minus the one with `o` at query `i`. -/
-theorem chainOp_eq_add_sum_simOp {o g P : Matrix (Fin d) (Fin d) ℂ}
-    (hg : g = o + g * P - o * P) (q : ℕ) (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) :
+theorem chainOp_eq_add_sum_simOp {o g P : Matrix d d ℂ}
+    (hg : g = o + g * P - o * P) (q : ℕ) (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) :
     chainOp g q U =
       chainOp o q U + ∑ i : Fin q, (simOp o g g P i q U - simOp o g o P i q U) := by
   induction q with
   | zero => simp [chainOp]
   | succ q ih =>
-    have hg' : ∀ X Y : Matrix (Fin d) (Fin d) ℂ,
+    have hg' : ∀ X Y : Matrix d d ℂ,
         X * g * Y = X * o * Y + X * g * P * Y - X * o * P * Y := by
       intro X Y
       conv_lhs => rw [hg]
@@ -234,20 +234,20 @@ end MeasChain
 
 section Norm
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d]
 
 /-- The norm is invariant under negation. -/
-theorem nrm_neg (v : Fin d → ℂ) : nrm (-v) = nrm v := by
+theorem nrm_neg (v : d → ℂ) : nrm (-v) = nrm v := by
   unfold nrm
   rw [WithLp.toLp_neg, norm_neg]
 
 /-- The triangle inequality for a difference. -/
-theorem nrm_sub_le (a b : Fin d → ℂ) : nrm (a - b) ≤ nrm a + nrm b := by
+theorem nrm_sub_le (a b : d → ℂ) : nrm (a - b) ≤ nrm a + nrm b := by
   rw [sub_eq_add_neg, ← nrm_neg b]
   exact nrm_add_le a (-b)
 
 /-- The triangle inequality for a finite sum. -/
-theorem nrm_sum_le {ι : Type} (s : Finset ι) (f : ι → Fin d → ℂ) :
+theorem nrm_sum_le {ι : Type} (s : Finset ι) (f : ι → d → ℂ) :
     nrm (∑ i ∈ s, f i) ≤ ∑ i ∈ s, nrm (f i) :=
   Finset.le_sum_of_subadditive nrm nrm_zero.le nrm_add_le s f
 
@@ -257,7 +257,7 @@ end Norm
 
 section Vector
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-- The slot of a simulator index: `i` for `some (i, b)`, `q` for `none`. -/
 def mrSlot {q : ℕ} : Option (Fin q × Bool) → ℕ
@@ -279,13 +279,13 @@ theorem card_mrIndex (q : ℕ) : Fintype.card (Option (Fin q × Bool)) = 2 * q +
     event vector `F P C_g ψ` of the chain of `g` has squared norm at most
     `2q + 1` times the sum over the slots of the squared norms of the event
     vectors of the simulator operators. -/
-theorem nrm_sq_le_card_mul_sum_simOp {o g P F : Matrix (Fin d) (Fin d) ℂ}
+theorem nrm_sq_le_card_mul_sum_simOp {o g P F : Matrix d d ℂ}
     (hg : g = o + g * P - o * P) (hP : P * P = P) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (ψ : Fin d → ℂ) :
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) (ψ : d → ℂ) :
     nrm ((F * P * chainOp g q U) *ᵥ ψ) ^ 2 ≤
       (2 * q + 1 : ℝ) * ∑ t : Option (Fin q × Bool),
         nrm ((F * P * simOp o g (if mrKeep t then o else g) P (mrSlot t) q U) *ᵥ ψ) ^ 2 := by
-  set e : Option (Fin q × Bool) → (Fin d → ℂ) := fun t =>
+  set e : Option (Fin q × Bool) → (d → ℂ) := fun t =>
     (F * P * simOp o g (if mrKeep t then o else g) P (mrSlot t) q U) *ᵥ ψ with he
   have h1 : F * P * chainOp g q U = F * P * simOp o g g P q q U +
       ∑ i : Fin q, (F * P * simOp o g g P i q U - F * P * simOp o g o P i q U) := by
@@ -334,7 +334,7 @@ def mrOracleAt (H : Fin m → Fin n) (θ : Fin n) (t : Option (Fin q × Bool)) (
     measurement of the query register with outcome `x`, then the oracle
     `mrOracleAt H θ t x` at query `i` and `H[x ↦ θ]` at every later query. -/
 def simChain (A : QAdv m n w q) (H : Fin m → Fin n) (θ : Fin n) (t : Option (Fin q × Bool)) :
-    QComp (m * n * w) (Fin m) :=
+    QComp (Fin (m * n * w)) (Fin m) :=
   measChain (oracleQ m n w H) (measX m n w) (fun x => oracleQ m n w (Function.update H x θ))
     (fun x => oracleQ m n w (mrOracleAt H θ t x)) (mrSlot t) q A.U
 
@@ -342,14 +342,14 @@ def simChain (A : QAdv m n w q) (H : Fin m → Fin n) (θ : Fin n) (t : Option (
     `(x, x', accept)` is the measured input `x`, the query register `x'` of the
     final state and the outcome of the final projector. -/
 def simRun (A : QAdv m n w q) (H : Fin m → Fin n) (θ : Fin n) (t : Option (Fin q × Bool)) :
-    QComp (m * n * w) (Fin m × Fin m × Bool) :=
+    QComp (Fin (m * n * w)) (Fin m × Fin m × Bool) :=
   QComp.qbind (simChain A H θ t) fun x => QComp.qbind (measX m n w) fun x' =>
     QComp.qbind A.measure fun acc => QComp.qpure (x, x', acc)
 
 /-- The run of `A` against `G` with its output measurements: the output
     `(x', accept)` is the query register of the final state and the outcome of
     the final projector. -/
-def outRun (A : QAdv m n w q) (G : Fin m → Fin n) : QComp (m * n * w) (Fin m × Bool) :=
+def outRun (A : QAdv m n w q) (G : Fin m → Fin n) : QComp (Fin (m * n * w)) (Fin m × Bool) :=
   QComp.qbind (oracleChain (oracleQ m n w G) q A.U) fun _ => QComp.qbind (measX m n w) fun x' =>
     QComp.qbind A.measure fun acc => QComp.qpure (x', acc)
 
@@ -440,9 +440,10 @@ theorem oracleU_update_eq (H : Fin m → Fin n) (x₀ : Fin m) (θ : Fin n) :
 
 /-- The probability of an output branch conjugated by `Y` at the initial state
     `∑ₖ ψₖ ψₖ†` is the sum of the squared norms of `Y ψₖ`. -/
-theorem prTrue_Q_eq_sum_nrm_sq {d : ℕ} (I : QComp d Bool) (ρ₀ : DensityMatrix d)
-    (Y : Matrix (Fin d) (Fin d) ℂ) (hI : ∀ σ, I.branch true σ = Y * σ * Yᴴ)
-    {ι : Type} [Fintype ι] (ψ : ι → Fin d → ℂ) (hρ : ρ₀.val = ∑ k, vecMulVec (ψ k) (star (ψ k))) :
+theorem prTrue_Q_eq_sum_nrm_sq {d : Type*} [Fintype d]
+    (I : QComp d Bool) (ρ₀ : DensityMatrix d)
+    (Y : Matrix d d ℂ) (hI : ∀ σ, I.branch true σ = Y * σ * Yᴴ)
+    {ι : Type} [Fintype ι] (ψ : ι → d → ℂ) (hρ : ρ₀.val = ∑ k, vecMulVec (ψ k) (star (ψ k))) :
     prTrue_Q I ρ₀ = ENNReal.ofReal (∑ k, nrm (Y *ᵥ ψ k) ^ 2) := by
   unfold prTrue_Q
   rw [hI, hρ, trace_mul_sum_vecMulVec_mul_conjTranspose, Complex.ofReal_re]
@@ -525,7 +526,7 @@ theorem prSimAt_le_prSimAcc (A : QAdv m n w q) (H : Fin m → Fin n) (θ : Fin n
   have hnn : ∀ o, 0 ≤ ((simRun A H θ t).branch o A.init.val).trace.re := fun o =>
     (Complex.le_def.mp ((simRun A H θ t).branch_psd o _ A.init.psd).trace_nonneg).1
   refine le_trans ?_ (Finset.single_le_sum (f := fun o =>
-    ((QComp.qpure (decide (o.1 = x₀) && o.2.2) : QComp (m * n * w) Bool).branch true
+    ((QComp.qpure (decide (o.1 = x₀) && o.2.2) : QComp (Fin (m * n * w)) Bool).branch true
       ((simRun A H θ t).branch o A.init.val)).trace.re) (fun o _ => ?_)
     (Finset.mem_univ (x₀, x₀, true)))
   · simp [qpure_branch_apply]

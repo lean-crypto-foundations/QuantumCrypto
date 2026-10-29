@@ -88,18 +88,18 @@ namespace Quantum.QROM
 
 section Branch
 
-variable {d : ℕ} {α β : Type}
+variable {d : Type*} [Fintype d] {α β : Type}
 
 open Classical in
 /-- The branch of `qpure a` is the identity at `a` and zero elsewhere. -/
-theorem qpure_branch_apply (a b : α) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem qpure_branch_apply (a b : α) (ρ : Matrix d d ℂ) :
     (QComp.qpure a : QComp d α).branch b ρ = if b = a then ρ else 0 := by
   simp only [QComp.qpure]
   split_ifs <;> simp
 
 /-- The branch of a bind over a `Unit`-valued prefix. -/
 theorem qbind_unit_branch (I : QComp d Unit) (f : Unit → QComp d β) (b : β)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (ρ : Matrix d d ℂ) :
     (QComp.qbind I f).branch b ρ = (f ()).branch b (I.branch () ρ) := by
   change ∑' u : Unit, (f u).branch b (I.branch u ρ) = _
   rw [tsum_eq_single () (fun u hu => absurd rfl hu)]
@@ -107,7 +107,7 @@ theorem qbind_unit_branch (I : QComp d Unit) (f : Unit → QComp d β) (b : β)
 /-- The branch of a bind over a `Bool`-valued prefix, as the sum of the two
     outcome contributions. -/
 theorem qbind_bool_branch (I : QComp d Bool) (f : Bool → QComp d β) (b : β)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (ρ : Matrix d d ℂ) :
     (QComp.qbind I f).branch b ρ =
       (f false).branch b (I.branch false ρ) + (f true).branch b (I.branch true ρ) := by
   change ∑' u : Bool, (f u).branch b (I.branch u ρ) = _
@@ -116,15 +116,15 @@ theorem qbind_bool_branch (I : QComp d Bool) (f : Bool → QComp d β) (b : β)
 /-- Post-composing with a pure relabelling `g` whose image avoids `b` gives a
     zero branch at `b`. -/
 theorem qbind_qpure_branch_of_ne (I : QComp d α) (g : α → β) (b : β)
-    (hb : ∀ a, b ≠ g a) (ρ : Matrix (Fin d) (Fin d) ℂ) :
+    (hb : ∀ a, b ≠ g a) (ρ : Matrix d d ℂ) :
     (QComp.qbind I (fun a => QComp.qpure (g a))).branch b ρ = 0 := by
   change ∑' a, (QComp.qpure (g a) : QComp d β).branch b (I.branch a ρ) = 0
   simp only [qpure_branch_apply, hb, ite_false, tsum_zero]
 
 /-- The branch of a unitary channel is conjugation by the unitary. -/
-theorem unitaryChannel_branch_apply (U : Matrix.unitaryGroup (Fin d) ℂ)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
-    (unitaryChannel U).branch () ρ = (U : Matrix (Fin d) (Fin d) ℂ) * ρ * (U : Matrix _ _ ℂ)ᴴ :=
+theorem unitaryChannel_branch_apply [DecidableEq d] (U : Matrix.unitaryGroup d ℂ)
+    (ρ : Matrix d d ℂ) :
+    (unitaryChannel U).branch () ρ = (U : Matrix d d ℂ) * ρ * (U : Matrix _ _ ℂ)ᴴ :=
   rfl
 
 end Branch
@@ -167,11 +167,11 @@ end Kronecker
 
 section MeasProj
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-- The projective measurement `{P, 1 - P}` of a projector `P`, outcome `true`
     for `P`. -/
-def projMeasurement (P : Matrix (Fin d) (Fin d) ℂ) (hH : Pᴴ = P) (hI : P * P = P) :
+def projMeasurement (P : Matrix d d ℂ) (hH : Pᴴ = P) (hI : P * P = P) :
     ProjectiveMeasurement d Bool where
   op
     | true => P
@@ -188,18 +188,18 @@ def projMeasurement (P : Matrix (Fin d) (Fin d) ℂ) (hH : Pᴴ = P) (hI : P * P
     · exact hI
 
 /-- The measurement `{P, 1 - P}` as an instrument with a `Bool` outcome. -/
-def measProj (P : Matrix (Fin d) (Fin d) ℂ) (hH : Pᴴ = P) (hI : P * P = P) :
+def measProj (P : Matrix d d ℂ) (hH : Pᴴ = P) (hI : P * P = P) :
     QComp d Bool :=
   projectiveMeasure (projMeasurement P hH hI)
 
 /-- The `true` branch of `measProj P` is the projection by `P`. -/
-theorem measProj_branch_true (P : Matrix (Fin d) (Fin d) ℂ) (hH : Pᴴ = P) (hI : P * P = P)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem measProj_branch_true (P : Matrix d d ℂ) (hH : Pᴴ = P) (hI : P * P = P)
+    (ρ : Matrix d d ℂ) :
     (measProj P hH hI).branch true ρ = P * ρ * Pᴴ := rfl
 
 /-- The `false` branch of `measProj P` is the projection by `1 − P`. -/
-theorem measProj_branch_false (P : Matrix (Fin d) (Fin d) ℂ) (hH : Pᴴ = P) (hI : P * P = P)
-    (ρ : Matrix (Fin d) (Fin d) ℂ) :
+theorem measProj_branch_false (P : Matrix d d ℂ) (hH : Pᴴ = P) (hI : P * P = P)
+    (ρ : Matrix d d ℂ) :
     (measProj P hH hI).branch false ρ = (1 - P) * ρ * (1 - P)ᴴ := rfl
 
 end MeasProj
@@ -277,13 +277,13 @@ theorem oracleU_val (H : Fin m → Fin n) :
       stdOracleFixedG m n H ⊗ₖ (1 : Matrix (Fin w) (Fin w) ℂ) := rfl
 
 /-- The standard oracle for `H` as a unitary channel on the total register. -/
-def oracleQ (H : Fin m → Fin n) : QComp (m * n * w) Unit :=
+def oracleQ (H : Fin m → Fin n) : QComp (Fin (m * n * w)) Unit :=
   unitaryChannel (oracleU m n w H)
 
 /-- The semi-classical oracle for `H` and `S`: measure `{Π_S, 1 - Π_S}`
     (outcome `true` iff the query register lies in `S`), then apply the
     standard oracle for `H`; the outcome is returned. -/
-def scOracleQ (H : Fin m → Fin n) (S : Finset (Fin m)) : QComp (m * n * w) Bool :=
+def scOracleQ (H : Fin m → Fin n) (S : Finset (Fin m)) : QComp (Fin (m * n * w)) Bool :=
   QComp.qbind (measProj (projS m n w S) (projS_conjTranspose m n w S) (projS_mul_self m n w S))
     (fun b => QComp.qbind (oracleQ m n w H) (fun _ => QComp.qpure b))
 
@@ -326,11 +326,11 @@ end Oracle
 
 section Chain
 
-variable {d : ℕ}
+variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-- `U₀ ; O ; U₁ ; … ; O ; U_q` for a `Unit`-valued oracle `O`. -/
 def oracleChain (O : QComp d Unit) :
-    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) → QComp d Unit
+    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup d ℂ) → QComp d Unit
   | 0, U => unitaryChannel (U 0)
   | q + 1, U =>
     QComp.qbind (unitaryChannel (U 0)) fun _ =>
@@ -339,7 +339,7 @@ def oracleChain (O : QComp d Unit) :
 /-- `U₀ ; O ; U₁ ; … ; O ; U_q` for a `Bool`-valued oracle `O`, returning the
     disjunction of the oracle outcomes. -/
 def scChain (O : QComp d Bool) :
-    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) → QComp d Bool
+    (q : ℕ) → (Fin (q + 1) → Matrix.unitaryGroup d ℂ) → QComp d Bool
   | 0, U => QComp.qbind (unitaryChannel (U 0)) fun _ => QComp.qpure false
   | q + 1, U =>
     QComp.qbind (unitaryChannel (U 0)) fun _ =>
@@ -349,7 +349,7 @@ def scChain (O : QComp d Bool) :
 /-- A `Bool`-valued oracle that always returns `false` chains to the
     `Unit`-valued chain of its underlying channel. -/
 theorem scChain_qbind_pure_false (O : QComp d Unit) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) :
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) :
     scChain (QComp.qbind O fun _ => QComp.qpure false) q U =
       QComp.qbind (oracleChain O q U) fun _ => QComp.qpure false := by
   induction q with
@@ -361,7 +361,7 @@ theorem scChain_qbind_pure_false (O : QComp d Unit) (q : ℕ)
     `false` branch. -/
 theorem scChain_branch_false_congr (O O' : QComp d Bool)
     (h : O.branch false = O'.branch false) (q : ℕ)
-    (U : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) :
+    (U : Fin (q + 1) → Matrix.unitaryGroup d ℂ) :
     (scChain O q U).branch false = (scChain O' q U).branch false := by
   induction q with
   | zero => rfl
@@ -378,7 +378,7 @@ structure QAdv (m n w q : ℕ) where
   /-- The unitaries `U₀, …, U_q`. -/
   U : Fin (q + 1) → Matrix.unitaryGroup (Fin (m * n * w)) ℂ
   /-- The initial state. -/
-  init : DensityMatrix (m * n * w)
+  init : DensityMatrix (Fin (m * n * w))
   /-- The projector of the final measurement. -/
   final : Matrix (Fin (m * n * w)) (Fin (m * n * w)) ℂ
   final_conjTranspose : finalᴴ = final
@@ -391,17 +391,17 @@ section Run
 variable {m n w q : ℕ} [NeZero n]
 
 /-- The final measurement of `A` as an instrument. -/
-def QAdv.measure (A : QAdv m n w q) : QComp (m * n * w) Bool :=
+def QAdv.measure (A : QAdv m n w q) : QComp (Fin (m * n * w)) Bool :=
   measProj A.final A.final_conjTranspose A.final_mul_self
 
 /-- The standard run `U₀ ; O_H ; U₁ ; … ; O_H ; U_q ; measure`. -/
-def run (A : QAdv m n w q) (H : Fin m → Fin n) : QComp (m * n * w) Bool :=
+def run (A : QAdv m n w q) (H : Fin m → Fin n) : QComp (Fin (m * n * w)) Bool :=
   QComp.qbind (oracleChain (oracleQ m n w H) q A.U) fun _ => A.measure
 
 /-- The semi-classical run with `scOracleQ H S` in place of `O_H`, returning
     `(output, find)`; `find = true` iff some measurement returned `true`. -/
 def runSC (A : QAdv m n w q) (H : Fin m → Fin n) (S : Finset (Fin m)) :
-    QComp (m * n * w) (Bool × Bool) :=
+    QComp (Fin (m * n * w)) (Bool × Bool) :=
   QComp.qbind (scChain (scOracleQ m n w H S) q A.U) fun f =>
     QComp.qbind A.measure fun out => QComp.qpure (out, f)
 

@@ -101,7 +101,7 @@ structure ClassicalRound (d c a : ℕ) where
 
 /-- The Kraus operators `ans (f y) P y` of a round with classical function `f`. -/
 def ClassicalRound.ops (R : ClassicalRound d c a) (f : Fin c → Fin a) :
-    MeasurementOps d (Fin c) where
+    MeasurementOps (Fin d) (Fin c) where
   op y := (R.ans (f y) : Matrix (Fin d) (Fin d) ℂ) * R.P y
   completeness := by
     have h : ∀ y, ((R.ans (f y) : Matrix (Fin d) (Fin d) ℂ) * R.P y)ᴴ *
@@ -112,7 +112,7 @@ def ClassicalRound.ops (R : ClassicalRound d c a) (f : Fin c → Fin a) :
     simp only [h, R.P_sum]
 
 /-- The round instrument: branch `y` is `ρ ↦ ans (f y) P y ρ P y ans (f y)ᴴ`. -/
-def roundQ (R : ClassicalRound d c a) (f : Fin c → Fin a) : QComp d (Fin c) :=
+def roundQ (R : ClassicalRound d c a) (f : Fin c → Fin a) : QComp (Fin d) (Fin c) :=
   measureOps (R.ops f)
 
 /-- The branches of `roundQ R f`. -/
@@ -123,7 +123,7 @@ theorem roundQ_branch (R : ClassicalRound d c a) (f : Fin c → Fin a) (y : Fin 
         ((R.ans (f y) : Matrix (Fin d) (Fin d) ℂ) * R.P y)ᴴ := rfl
 
 /-- The round with its outcome discarded. -/
-def roundU (R : ClassicalRound d c a) (f : Fin c → Fin a) : QComp d Unit :=
+def roundU (R : ClassicalRound d c a) (f : Fin c → Fin a) : QComp (Fin d) Unit :=
   QComp.qbind (roundQ R f) fun _ => QComp.qpure ()
 
 /-- The branch of `roundU R f`: the sum of the branches of `roundQ R f`. -/
@@ -493,14 +493,14 @@ def mergeChain (V : Matrix.unitaryGroup (Fin d) ℂ)
 
 /-- Two unitary channels in sequence are the channel of the product. -/
 theorem unitaryChannel_qbind_unitaryChannel {β : Type} (U V : Matrix.unitaryGroup (Fin d) ℂ)
-    (g : Unit → QComp d β) :
+    (g : Unit → QComp (Fin d) β) :
     QComp.qbind (unitaryChannel U) (fun _ => QComp.qbind (unitaryChannel V) g) =
       QComp.qbind (unitaryChannel (V * U)) g := by
   rw [← unitaryChannel_compose, QComp.qbind_assoc]
 
 /-- The `Bool` chain of a merged family is the first chain, the unitary, and the
     second chain, with the flags combined by `||`. -/
-theorem scChain_mergeChain (O : QComp d Bool) (V : Matrix.unitaryGroup (Fin d) ℂ)
+theorem scChain_mergeChain (O : QComp (Fin d) Bool) (V : Matrix.unitaryGroup (Fin d) ℂ)
     (B : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) (q₀ : ℕ)
     (A : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ) :
     scChain O (q + q₀) (mergeChain V B q₀ A) =
@@ -531,10 +531,10 @@ variable {d c a q : ℕ}
 
 /-- `head ; (round ; segment)ᵏ` over a `Bool`-valued oracle, returning the
     disjunction of the oracle outcomes; the rounds do not touch the flag. -/
-def mrChainSC (O : QComp d Bool) (f : Fin c → Fin a) :
+def mrChainSC (O : QComp (Fin d) Bool) (f : Fin c → Fin a) :
     (k : ℕ) → (q₀ : ℕ) → (Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ) →
       (Fin k → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) →
-      (Fin k → ClassicalRound d c a) → QComp d Bool
+      (Fin k → ClassicalRound d c a) → QComp (Fin d) Bool
   | 0, q₀, head, _, _ => scChain O q₀ head
   | k + 1, q₀, head, tail, R =>
     QComp.qbind (scChain O q₀ head) fun b => QComp.qbind (roundU (R 0) f) fun _ =>
@@ -542,17 +542,17 @@ def mrChainSC (O : QComp d Bool) (f : Fin c → Fin a) :
         QComp.qpure (b || b')
 
 /-- `head ; (round ; segment)ᵏ` over a `Unit`-valued oracle. -/
-def mrChain (O : QComp d Unit) (f : Fin c → Fin a) :
+def mrChain (O : QComp (Fin d) Unit) (f : Fin c → Fin a) :
     (k : ℕ) → (q₀ : ℕ) → (Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ) →
       (Fin k → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ) →
-      (Fin k → ClassicalRound d c a) → QComp d Unit
+      (Fin k → ClassicalRound d c a) → QComp (Fin d) Unit
   | 0, q₀, head, _, _ => oracleChain O q₀ head
   | k + 1, q₀, head, tail, R =>
     QComp.qbind (oracleChain O q₀ head) fun _ => QComp.qbind (roundU (R 0) f) fun _ =>
       mrChain O f k q (tail 0) (Fin.tail tail) (Fin.tail R)
 
 /-- A `Bool` oracle that always returns `false` gives the `Unit` multi-round chain. -/
-theorem mrChainSC_qbind_pure_false (O : QComp d Unit) (f : Fin c → Fin a) (k q₀ : ℕ)
+theorem mrChainSC_qbind_pure_false (O : QComp (Fin d) Unit) (f : Fin c → Fin a) (k q₀ : ℕ)
     (head : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (tail : Fin k → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (R : Fin k → ClassicalRound d c a) :
@@ -566,7 +566,7 @@ theorem mrChainSC_qbind_pure_false (O : QComp d Unit) (f : Fin c → Fin a) (k q
 
 /-- The multi-round chain over the merged head is the head chain, the unitary
     `V`, and the multi-round chain from the first segment on. -/
-theorem mrChainSC_mergeChain (O : QComp d Bool) (f : Fin c → Fin a) (k q₀ : ℕ)
+theorem mrChainSC_mergeChain (O : QComp (Fin d) Bool) (f : Fin c → Fin a) (k q₀ : ℕ)
     (head : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ) (V : Matrix.unitaryGroup (Fin d) ℂ)
     (B : Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (tail : Fin k → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
@@ -609,7 +609,8 @@ def liftR (e : Fin (d * c) ≃ Fin d') (R : ClassicalRound d c a) : ClassicalRou
 
 /-- A channel on the extended register lifts a channel on the register when it
     acts as `Φ ⊗ id` on every product `B ⊗ E`. -/
-def LiftsQ {β : Type} (e : Fin (d * c) ≃ Fin d') (O : QComp d β) (O' : QComp d' β) : Prop :=
+def LiftsQ {β : Type} (e : Fin (d * c) ≃ Fin d') (O : QComp (Fin d) β)
+    (O' : QComp (Fin d') β) : Prop :=
   ∀ b (B : Matrix (Fin d) (Fin d) ℂ) (E : Matrix (Fin c) (Fin c) ℂ),
     O'.branch b (kr e B E) = kr e (O.branch b B) E
 
@@ -632,7 +633,7 @@ theorem liftsQ_roundU (e : Fin (d * c) ≃ Fin d') (R : ClassicalRound d c a) (f
 
 /-- `qpure x` lifts `qpure x`. -/
 theorem liftsQ_qpure {β : Type} (e : Fin (d * c) ≃ Fin d') (x : β) :
-    LiftsQ e (QComp.qpure x : QComp d β) (QComp.qpure x) := by
+    LiftsQ e (QComp.qpure x : QComp (Fin d) β) (QComp.qpure x) := by
   intro b B E
   rw [qpure_branch_apply, qpure_branch_apply]
   split_ifs
@@ -640,8 +641,9 @@ theorem liftsQ_qpure {β : Type} (e : Fin (d * c) ≃ Fin d') (x : β) :
   · rw [kr_zero_left]
 
 /-- `LiftsQ` is preserved by `qbind` over a finite outcome type. -/
-theorem liftsQ_qbind {β γ : Type} [Finite β] (e : Fin (d * c) ≃ Fin d') {I : QComp d β}
-    {I' : QComp d' β} {g : β → QComp d γ} {g' : β → QComp d' γ} (hI : LiftsQ e I I')
+theorem liftsQ_qbind {β γ : Type} [Finite β] (e : Fin (d * c) ≃ Fin d') {I : QComp (Fin d) β}
+    {I' : QComp (Fin d') β} {g : β → QComp (Fin d) γ} {g' : β → QComp (Fin d') γ}
+    (hI : LiftsQ e I I')
     (hg : ∀ x, LiftsQ e (g x) (g' x)) : LiftsQ e (QComp.qbind I g) (QComp.qbind I' g') := by
   have := Fintype.ofFinite β
   intro b B E
@@ -650,7 +652,8 @@ theorem liftsQ_qbind {β γ : Type} [Finite β] (e : Fin (d * c) ≃ Fin d') {I 
   rw [hI, hg]
 
 /-- The semi-classical chain with lifted oracle and lifted unitaries lifts the chain. -/
-theorem liftsQ_scChain (e : Fin (d * c) ≃ Fin d') (O : QComp d Bool) (O' : QComp d' Bool)
+theorem liftsQ_scChain (e : Fin (d * c) ≃ Fin d') (O : QComp (Fin d) Bool)
+    (O' : QComp (Fin d') Bool)
     (hO : LiftsQ e O O') (q₀ : ℕ) (U : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ) :
     LiftsQ e (scChain O q₀ U) (scChain O' q₀ (liftU e ∘ U)) := by
   induction q₀ with
@@ -683,7 +686,8 @@ theorem liftsQ_scChain (e : Fin (d * c) ≃ Fin d') (O : QComp d Bool) (O' : QCo
 
 /-- The multi-round semi-classical chain with lifted oracle, unitaries and rounds
     lifts the chain. -/
-theorem liftsQ_mrChainSC (e : Fin (d * c) ≃ Fin d') (O : QComp d Bool) (O' : QComp d' Bool)
+theorem liftsQ_mrChainSC (e : Fin (d * c) ≃ Fin d') (O : QComp (Fin d) Bool)
+    (O' : QComp (Fin d') Bool)
     (hO : LiftsQ e O O') (f : Fin c → Fin a) (k q₀ : ℕ)
     (head : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (tail : Fin k → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
@@ -715,7 +719,8 @@ variable {d c a q d' : ℕ} [NeZero c]
     by `Rest'`: the observable `X ⊗ 1` after the deferred round on `σ ⊗ |0⟩⟨0|`
     sees the round instrument on `σ`. -/
 theorem trace_kr_one_mul_roundV {β : Type} (e : Fin (d * c) ≃ Fin d')
-    (R : ClassicalRound d c a) (f : Fin c → Fin a) (Rest : QComp d β) (Rest' : QComp d' β)
+    (R : ClassicalRound d c a) (f : Fin c → Fin a) (Rest : QComp (Fin d) β)
+    (Rest' : QComp (Fin d') β)
     (hRest : LiftsQ e Rest Rest') (X σ : Matrix (Fin d) (Fin d) ℂ) (b : β) :
     (kr e X 1 * Rest'.branch b ((roundV e R f : Matrix (Fin d') (Fin d') ℂ) * kr e σ (ancProj 0) *
         (roundV e R f : Matrix (Fin d') (Fin d') ℂ)ᴴ)).trace =
@@ -728,7 +733,7 @@ theorem trace_kr_one_mul_roundV {β : Type} (e : Fin (d * c) ≃ Fin d')
 omit [NeZero c] in
 /-- The multi-round chain over a `Bool` oracle, with the flag of the head and
     the flags of the rest, at the branch level. -/
-theorem mrChainSC_succ_branch (O : QComp d Bool) (f : Fin c → Fin a) (k q₀ : ℕ)
+theorem mrChainSC_succ_branch (O : QComp (Fin d) Bool) (f : Fin c → Fin a) (k q₀ : ℕ)
     (head : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (tail : Fin (k + 1) → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (R : Fin (k + 1) → ClassicalRound d c a) (b : Bool) (ρ : Matrix (Fin d) (Fin d) ℂ) :
@@ -742,7 +747,7 @@ theorem mrChainSC_succ_branch (O : QComp d Bool) (f : Fin c → Fin a) (k q₀ :
 
 /-- The peel identity: the deferred single-round chain on `ρ ⊗ |0⟩⟨0|`, seen
     through `X ⊗ 1`, is the multi-round chain with one more round on `ρ`. -/
-theorem trace_peel (e : Fin (d * c) ≃ Fin d') (O : QComp d Bool) (O' : QComp d' Bool)
+theorem trace_peel (e : Fin (d * c) ≃ Fin d') (O : QComp (Fin d) Bool) (O' : QComp (Fin d') Bool)
     (hO : LiftsQ e O O') (f : Fin c → Fin a) (k q₀ : ℕ)
     (head : Fin (q₀ + 1) → Matrix.unitaryGroup (Fin d) ℂ)
     (tail : Fin (k + 1) → Fin (q + 1) → Matrix.unitaryGroup (Fin d) ℂ)
@@ -861,14 +866,15 @@ structure MRH (m n w q q₀ k c a : ℕ) where
   /-- The rounds. -/
   rounds : Fin k → ClassicalRound (m * n * w) c a
   /-- The initial state. -/
-  init : DensityMatrix (m * n * w)
+  init : DensityMatrix (Fin (m * n * w))
   /-- The projector of the final measurement. -/
   final : Matrix (Fin (m * n * w)) (Fin (m * n * w)) ℂ
   final_conjTranspose : finalᴴ = final
   final_mul_self : final * final = final
 
 /-- The state `ρ ⊗ |0⟩⟨0|` with a fresh ancilla inside the work register. -/
-def liftInit [NeZero c] (ρ : DensityMatrix (m * n * w)) : DensityMatrix (m * n * (w * c)) where
+def liftInit [NeZero c] (ρ : DensityMatrix (Fin (m * n * w))) :
+    DensityMatrix (Fin (m * n * (w * c))) where
   val := kr (ancE m n w c) ρ.val (ancProj 0)
   psd := kr_posSemidef _ ρ.psd (ancProj_posSemidef 0)
   tr_one := by rw [trace_kr, ρ.tr_one, trace_ancProj, one_mul]
@@ -999,7 +1005,7 @@ structure QAdvMR (m n w q k c a : ℕ) where
   /-- The rounds, round `j` between segments `j` and `j + 1`. -/
   rounds : Fin k → ClassicalRound (m * n * w) c a
   /-- The initial state. -/
-  init : DensityMatrix (m * n * w)
+  init : DensityMatrix (Fin (m * n * w))
   /-- The projector of the final measurement. -/
   final : Matrix (Fin (m * n * w)) (Fin (m * n * w)) ℂ
   final_conjTranspose : finalᴴ = final
@@ -1016,7 +1022,7 @@ def QAdvMR.toMRH (A : QAdvMR m n w q k c a) : MRH m n w q q k c a where
   final_mul_self := A.final_mul_self
 
 /-- The final measurement of `A` as an instrument. -/
-def QAdvMR.measure (A : QAdvMR m n w q k c a) : QComp (m * n * w) Bool :=
+def QAdvMR.measure (A : QAdvMR m n w q k c a) : QComp (Fin (m * n * w)) Bool :=
   measProj A.final A.final_conjTranspose A.final_mul_self
 
 variable [NeZero n]
@@ -1024,14 +1030,14 @@ variable [NeZero n]
 /-- The standard run: segment `0` with `O_H`, round `0` with `f`, segment `1`,
     …, segment `k`, then the final measurement. -/
 def runMR (A : QAdvMR m n w q k c a) (H : Fin m → Fin n) (f : Fin c → Fin a) :
-    QComp (m * n * w) Bool :=
+    QComp (Fin (m * n * w)) Bool :=
   QComp.qbind (mrChain (oracleQ m n w H) f k q (A.seg 0) (Fin.tail A.seg) A.rounds) fun _ =>
     A.measure
 
 /-- The semi-classical run with `scOracleQ H S` in the segments and the `Find`
     flag threaded through the rounds, returning `(output, find)`. -/
 def runSCMR (A : QAdvMR m n w q k c a) (H : Fin m → Fin n) (f : Fin c → Fin a)
-    (S : Finset (Fin m)) : QComp (m * n * w) (Bool × Bool) :=
+    (S : Finset (Fin m)) : QComp (Fin (m * n * w)) (Bool × Bool) :=
   QComp.qbind (mrChainSC (scOracleQ m n w H S) f k q (A.seg 0) (Fin.tail A.seg) A.rounds)
     fun fl => QComp.qbind A.measure fun out => QComp.qpure (out, fl)
 

@@ -369,7 +369,7 @@ theorem cmpLocalU_eq_cmpOracleU : cmpLocalU m n w = cmpOracleU m n w :=
 variable {m n w} {q : ℕ}
 
 /-- The run of `A` against the per-query compressed oracle. -/
-def runCmpLocal (A : QAdv m n w q) : QComp (m * n * w * (n + 1) ^ m) Bool :=
+def runCmpLocal (A : QAdv m n w q) : QComp (Fin (m * n * w * (n + 1) ^ m)) Bool :=
   runLift ((n + 1) ^ m) (cmpLocalU m n w) A
 
 /-- The run against the per-query compressed oracle is the compressed run. -/
