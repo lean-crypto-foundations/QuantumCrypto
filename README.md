@@ -6,6 +6,12 @@ one-way to hiding, the semi-classical oracle, multi-round adversaries, the compr
 oracle, measure-and-reprogram, k-wise independent oracles, and search bounds.
 Lean v4.35.0, Mathlib v4.35.0.
 
+## Building
+
+QuantumFoundations is a path dependency: clone it beside this repository, as
+`../QuantumFoundations`, and check out the commit `QF_REV` named in
+`.github/workflows/ci.yml`, which is the commit CI builds against. Then run `lake build`.
+
 ## License
 
 Dual-licensed under the MIT license (`LICENSE-MIT`) or the Apache License 2.0

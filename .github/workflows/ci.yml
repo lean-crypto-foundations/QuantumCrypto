@@ -15,11 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      # QuantumFoundations is a path dependency (../QuantumFoundations); until its pull
-      # requests #15 and #17 are merged, this branch builds against bridge-instrument.
-      - name: QuantumFoundations beside the checkout
-        run: git clone --depth 1 --branch bridge-instrument
-          https://github.com/lean-crypto-foundations/QuantumFoundations ../QuantumFoundations
+      # QuantumFoundations is a path dependency (../QuantumFoundations). CI builds against
+      # the fixed commit QF_REV, so that a later push to QuantumFoundations cannot change what
+      # a green check means. Fetching the commit by its hash also works after its branch is
+      # deleted. Update QF_REV in the pull request that needs a newer QuantumFoundations.
+      - name: QuantumFoundations beside the checkout, at QF_REV
+        env:
+          QF_REV: e3c21da63d70c6fe7055cca40c397e3dca2633db
+        run: |
+          git init -q ../QuantumFoundations
+          git -C ../QuantumFoundations fetch -q --depth 1 \
+            https://github.com/lean-crypto-foundations/QuantumFoundations "$QF_REV"
+          git -C ../QuantumFoundations checkout -q --detach FETCH_HEAD
+          git -C ../QuantumFoundations log -1 --format='QuantumFoundations at %H (%s)'
       - uses: leanprover/lean-action@v1
         with:
           build-args: "--log-level=warning"
