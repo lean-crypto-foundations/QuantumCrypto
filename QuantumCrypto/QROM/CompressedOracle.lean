@@ -180,12 +180,12 @@ theorem trace_single_mul_mul_single (σ : Matrix (Fin t) (Fin t) ℂ) (k j : Fin
   · exact Matrix.trace_single_eq_of_ne _ _ _ h
 
 /-- `ρ ⊗ₖ σ` as a density matrix. -/
-def kronDM (ρ : DensityMatrix d) (σ : DensityMatrix t) : DensityMatrix (d * t) :=
+def kronDM (ρ : DensityMatrix (Fin d)) (σ : DensityMatrix (Fin t)) : DensityMatrix (Fin (d * t)) :=
   ⟨ρ.val ⊗ₖ σ.val, QHL.kronecker_posSemidef ρ.psd σ.psd, by
     rw [TensorProduct.trace_kronecker, ρ.tr_one, σ.tr_one, one_mul]⟩
 
 /-- The matrix of `kronDM ρ σ`. -/
-theorem kronDM_val (ρ : DensityMatrix d) (σ : DensityMatrix t) :
+theorem kronDM_val (ρ : DensityMatrix (Fin d)) (σ : DensityMatrix (Fin t)) :
     (kronDM ρ σ).val = ρ.val ⊗ₖ σ.val := rfl
 
 end Block
@@ -212,14 +212,14 @@ theorem QAdv.finalLift_mul_self (t : ℕ) (A : QAdv m n w q) :
   rw [QAdv.finalLift, kronecker_mul_kronecker, A.final_mul_self, Matrix.mul_one]
 
 /-- The final measurement of `A` on the register `Fin (m * n * w * t)`. -/
-def QAdv.measureLift (t : ℕ) (A : QAdv m n w q) : QComp (m * n * w * t) Bool :=
+def QAdv.measureLift (t : ℕ) (A : QAdv m n w q) : QComp (Fin (m * n * w * t)) Bool :=
   measProj (A.finalLift t) (QAdv.finalLift_conjTranspose t A) (QAdv.finalLift_mul_self t A)
 
 /-- The run of `A` against an oracle `O` on the register `Fin (m * n * w * t)`,
     the adversary's unitaries and final projector acting as `· ⊗ₖ 1_t`:
     `U₀ ⊗ 1 ; O ; U₁ ⊗ 1 ; … ; O ; U_q ⊗ 1 ; measure (final ⊗ 1)`. -/
 def runLift (t : ℕ) (O : Matrix.unitaryGroup (Fin (m * n * w * t)) ℂ) (A : QAdv m n w q) :
-    QComp (m * n * w * t) Bool :=
+    QComp (Fin (m * n * w * t)) Bool :=
   QComp.qbind (oracleChain (unitaryChannel O) q (fun i => tableLiftU t (A.U i))) fun _ =>
     A.measureLift t
 
@@ -274,7 +274,7 @@ theorem trace_runLift_tableOracleU {t : ℕ} (f : Fin t → Fin m → Fin n) (A 
 /-- Against `tableOracleU f` with the table register in a state `σ`, the
     acceptance probability is `∑ₖ σ k k · prOut A (f k)`. -/
 theorem prTrue_runLift_tableOracleU {t : ℕ} (f : Fin t → Fin m → Fin n) (A : QAdv m n w q)
-    (σ : DensityMatrix t) :
+    (σ : DensityMatrix (Fin t)) :
     prTrue_Q (runLift t (tableOracleU (w := w) f) A) (kronDM A.init σ) =
       ∑ k, ENNReal.ofReal (σ.val k k).re * prOut A (f k) := by
   have hσ : ∀ k, 0 ≤ σ.val k k := fun k => σ.psd.diag_nonneg
@@ -311,7 +311,7 @@ theorem tableUniformVec_mul_star (k : Fin (n ^ m)) :
 variable [NeZero n]
 
 /-- The pure state of the uniform superposition on the table register. -/
-def tablePure : DensityMatrix (n ^ m) where
+def tablePure : DensityMatrix (Fin (n ^ m)) where
   val := vecMulVec (tableUniformVec m n) (star (tableUniformVec m n))
   psd := posSemidef_vecMulVec_self_star _
   tr_one := by
@@ -361,7 +361,7 @@ theorem runReg_eq_runLift (A : QAdv m n w q) :
 
 /-- The initial state of the purified run: `A.init` tensored with the uniform
     superposition on the table register. -/
-def initPure (A : QAdv m n w q) : DensityMatrix (m * n * w * n ^ m) :=
+def initPure (A : QAdv m n w q) : DensityMatrix (Fin (m * n * w * n ^ m)) :=
   kronDM A.init (tablePure m n)
 
 /-- The acceptance probability of the run against the purified standard oracle:
@@ -404,14 +404,15 @@ theorem oneKronU_val (d : ℕ) (D : Matrix.unitaryGroup (Fin t) ℂ) :
       (1 : Matrix (Fin d) (Fin d) ℂ) ⊗ₖ (D : Matrix (Fin t) (Fin t) ℂ) := rfl
 
 /-- `D σ Dᴴ` as a density matrix. -/
-def conjDM (D : Matrix.unitaryGroup (Fin t) ℂ) (σ : DensityMatrix t) : DensityMatrix t :=
+def conjDM (D : Matrix.unitaryGroup (Fin t) ℂ) (σ : DensityMatrix (Fin t)) :
+    DensityMatrix (Fin t) :=
   ⟨(D : Matrix (Fin t) (Fin t) ℂ) * σ.val * (D : Matrix (Fin t) (Fin t) ℂ)ᴴ,
     σ.psd.mul_mul_conjTranspose_same _, by
     rw [Matrix.trace_mul_cycle, ← star_eq_conjTranspose,
       Matrix.mem_unitaryGroup_iff'.mp D.prop, Matrix.one_mul, σ.tr_one]⟩
 
 /-- The matrix of `conjDM D σ`. -/
-theorem conjDM_val (D : Matrix.unitaryGroup (Fin t) ℂ) (σ : DensityMatrix t) :
+theorem conjDM_val (D : Matrix.unitaryGroup (Fin t) ℂ) (σ : DensityMatrix (Fin t)) :
     (conjDM D σ).val =
       (D : Matrix (Fin t) (Fin t) ℂ) * σ.val * (D : Matrix (Fin t) (Fin t) ℂ)ᴴ := rfl
 
@@ -446,8 +447,8 @@ variable {m n w q : ℕ}
 /-- Running against `(1 ⊗ D)ᴴ O (1 ⊗ D)` from `ρ ⊗ σ` accepts with the same
     probability as running against `O` from `ρ ⊗ D σ Dᴴ`. -/
 theorem prTrue_runLift_conj (O : Matrix.unitaryGroup (Fin (m * n * w * t)) ℂ)
-    (D : Matrix.unitaryGroup (Fin t) ℂ) (A : QAdv m n w q) (ρ : DensityMatrix (m * n * w))
-    (σ : DensityMatrix t) :
+    (D : Matrix.unitaryGroup (Fin t) ℂ) (A : QAdv m n w q) (ρ : DensityMatrix (Fin (m * n * w)))
+    (σ : DensityMatrix (Fin t)) :
     prTrue_Q (runLift t (star (oneKronU (m * n * w) D) * O * oneKronU (m * n * w) D) A)
         (kronDM ρ σ) =
       prTrue_Q (runLift t O A) (kronDM ρ (conjDM D σ)) := by
@@ -610,7 +611,7 @@ theorem decompDB_apply_empty (i : Fin ((n + 1) ^ m)) :
     decompEntry_apply_last]
 
 /-- The pure state of the empty database. -/
-def dbEmpty : DensityMatrix ((n + 1) ^ m) where
+def dbEmpty : DensityMatrix (Fin ((n + 1) ^ m)) where
   val := vecMulVec (Pi.single (dbEmptyIdx m n) 1) (star (Pi.single (dbEmptyIdx m n) 1))
   psd := posSemidef_vecMulVec_self_star _
   tr_one := by
@@ -649,11 +650,11 @@ variable {m n w} {q : ℕ}
 
 /-- The initial state of the compressed run: `A.init` tensored with the empty
     database. -/
-def initCmp (A : QAdv m n w q) : DensityMatrix (m * n * w * (n + 1) ^ m) :=
+def initCmp (A : QAdv m n w q) : DensityMatrix (Fin (m * n * w * (n + 1) ^ m)) :=
   kronDM A.init (dbEmpty m n)
 
 /-- The run of `A` against the compressed oracle. -/
-def runCmp (A : QAdv m n w q) : QComp (m * n * w * (n + 1) ^ m) Bool :=
+def runCmp (A : QAdv m n w q) : QComp (Fin (m * n * w * (n + 1) ^ m)) Bool :=
   runLift ((n + 1) ^ m) (cmpOracleU m n w) A
 
 /-- The acceptance probability of `A` against the compressed oracle, from the

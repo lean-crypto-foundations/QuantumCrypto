@@ -32,7 +32,7 @@ matrix entries.
 * `stdOracleFixed H`, `stdOracleReg` — the instances at `X = Y = Fin 2`
   (dimensions `4` and `16`)
 * `stdOracleFixedQ H`, `stdOracleRegQ` — the same as unitary channels in
-  `QComp 4 Unit` and `QComp 16 Unit`
+  `QComp (Fin 4) Unit` and `QComp (Fin 16) Unit`
 
 ## Main results
 
@@ -232,12 +232,12 @@ theorem stdOracleReg_ket (x y : Fin 2) (G : Fin 2 → Fin 2) :
 
 /-! ## The oracles as instruments -/
 
-/-- The standard oracle for `H` as the unitary channel `ρ ↦ U ρ Uᴴ` on `QComp 4`. -/
-def stdOracleFixedQ (H : Fin 2 → Fin 2) : QComp 4 Unit :=
+/-- The standard oracle for `H` as the unitary channel `ρ ↦ U ρ Uᴴ` on `QComp (Fin 4)`. -/
+def stdOracleFixedQ (H : Fin 2 → Fin 2) : QComp (Fin 4) Unit :=
   UnitaryChannel.unitaryChannel ⟨stdOracleFixed H, stdOracleFixed_unitary H⟩
 
-/-- The register oracle as the unitary channel `ρ ↦ U ρ Uᴴ` on `QComp 16`. -/
-def stdOracleRegQ : QComp 16 Unit :=
+/-- The register oracle as the unitary channel `ρ ↦ U ρ Uᴴ` on `QComp (Fin 16)`. -/
+def stdOracleRegQ : QComp (Fin 16) Unit :=
   UnitaryChannel.unitaryChannel ⟨stdOracleReg, stdOracleReg_unitary⟩
 
 /-! ## Reduction checks
