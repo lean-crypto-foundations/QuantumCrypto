@@ -57,8 +57,9 @@ of key tables, and the uniform average over key tables is unchanged.
 ## Use
 
 The statements are over an abstract encryption map `enc` and partial inverse
-`dec`, so they apply to the classical and the quantum game alike. `HopDecaps`
-applies them to the decapsulation hop.
+`dec`, so they apply to the classical and the quantum game alike. The decapsulation hop
+that uses them, `CatCryptCore.Quantum.QROM.HopDecaps` in
+[CatCrypt-core](https://github.com/spitters/CatCrypt-core), is not in this repository.
 
 ## References
 
