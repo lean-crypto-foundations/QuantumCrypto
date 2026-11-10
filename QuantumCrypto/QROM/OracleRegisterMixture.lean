@@ -292,14 +292,15 @@ theorem oracleChain_reg_branch (G : Fin m → Fin n) (k : ℕ)
       (oracleChain (oracleQ m n w G) k V).branch () X ⊗ₖ tableProj m n G := by
   induction k generalizing X with
   | zero =>
-    simp only [oracleChain, unitaryChannel_branch_apply, tableLiftU_val, kronecker_one_conj]
+    simp only [oracleChain, UnitaryChannel.unitaryChannel_branch, tableLiftU_val,
+      kronecker_one_conj]
   | succ k ih =>
     simp only [oracleChain]
     rw [qbind_unit_branch, qbind_unit_branch, qbind_unit_branch, qbind_unit_branch]
-    rw [unitaryChannel_branch_apply, unitaryChannel_branch_apply, tableLiftU_val,
-      kronecker_one_conj]
-    rw [oracleRegQ, oracleQ, unitaryChannel_branch_apply, unitaryChannel_branch_apply,
-      oracleRegU_conj_kronecker_tableProj]
+    rw [UnitaryChannel.unitaryChannel_branch, UnitaryChannel.unitaryChannel_branch,
+      tableLiftU_val, kronecker_one_conj]
+    rw [oracleRegQ, oracleQ, UnitaryChannel.unitaryChannel_branch,
+      UnitaryChannel.unitaryChannel_branch, oracleRegU_conj_kronecker_tableProj]
     exact ih (Fin.tail V) _
 
 end RegOracle

@@ -121,12 +121,6 @@ theorem qbind_qpure_branch_of_ne (I : QComp d α) (g : α → β) (b : β)
   change ∑' a, (QComp.qpure (g a) : QComp d β).branch b (I.branch a ρ) = 0
   simp only [qpure_branch_apply, hb, ite_false, tsum_zero]
 
-/-- The branch of a unitary channel is conjugation by the unitary. -/
-theorem unitaryChannel_branch_apply [DecidableEq d] (U : Matrix.unitaryGroup d ℂ)
-    (ρ : Matrix d d ℂ) :
-    (unitaryChannel U).branch () ρ = (U : Matrix d d ℂ) * ρ * (U : Matrix _ _ ℂ)ᴴ :=
-  rfl
-
 end Branch
 
 /-! ## Kronecker products of unitaries -/

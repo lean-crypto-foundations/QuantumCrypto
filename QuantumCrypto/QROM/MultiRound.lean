@@ -618,7 +618,7 @@ def LiftsQ {β : Type} (e : Fin (d * c) ≃ Fin d') (O : QComp (Fin d) β)
 theorem liftsQ_unitaryChannel (e : Fin (d * c) ≃ Fin d') (U : Matrix.unitaryGroup (Fin d) ℂ) :
     LiftsQ e (unitaryChannel U) (unitaryChannel (liftU e U)) := by
   intro _ B E
-  rw [unitaryChannel_branch_apply, unitaryChannel_branch_apply, liftU_val, kr_mul,
+  rw [UnitaryChannel.unitaryChannel_branch, UnitaryChannel.unitaryChannel_branch, liftU_val, kr_mul,
     kr_conjTranspose, kr_mul, conjTranspose_one, one_mul, mul_one]
 
 /-- The lifted round lifts the round. -/

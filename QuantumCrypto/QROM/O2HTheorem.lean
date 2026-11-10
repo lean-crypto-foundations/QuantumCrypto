@@ -246,9 +246,9 @@ theorem oracleChain_unitaryChannel_branch (O : Matrix.unitaryGroup d ℂ) (q : �
     (oracleChain (unitaryChannel O) q U).branch () ρ =
       chainOp (O : Matrix _ _ ℂ) q U * ρ * (chainOp (O : Matrix _ _ ℂ) q U)ᴴ := by
   induction q generalizing ρ with
-  | zero => simp only [oracleChain, chainOp, unitaryChannel_branch_apply]
+  | zero => simp only [oracleChain, chainOp, UnitaryChannel.unitaryChannel_branch]
   | succ q ih =>
-    simp only [oracleChain, qbind_unit_branch, unitaryChannel_branch_apply, ih, chainOp,
+    simp only [oracleChain, qbind_unit_branch, UnitaryChannel.unitaryChannel_branch, ih, chainOp,
       conjTranspose_mul, Matrix.mul_assoc]
 
 /-- A chain of contractions is a contraction. -/
@@ -349,7 +349,7 @@ theorem scChain_succ_branch_true (O : QComp d Bool) (q : ℕ)
         (scChain O q (Fin.tail U)).branch true
           (O.branch false ((U 0 : Matrix _ _ ℂ) * ρ * (U 0 : Matrix _ _ ℂ)ᴴ)) := by
   simp only [scChain]
-  rw [qbind_unit_branch, qbind_bool_branch, unitaryChannel_branch_apply]
+  rw [qbind_unit_branch, qbind_bool_branch, UnitaryChannel.unitaryChannel_branch]
   simp only [qbind_branch_apply, tsum_fintype, Fintype.sum_bool, qpure_branch_apply]
   simp
   abel
@@ -362,7 +362,7 @@ theorem scChain_succ_branch_false (O : QComp d Bool) (q : ℕ)
       (scChain O q (Fin.tail U)).branch false
         (O.branch false ((U 0 : Matrix _ _ ℂ) * ρ * (U 0 : Matrix _ _ ℂ)ᴴ)) := by
   simp only [scChain]
-  rw [qbind_unit_branch, qbind_bool_branch, unitaryChannel_branch_apply]
+  rw [qbind_unit_branch, qbind_bool_branch, UnitaryChannel.unitaryChannel_branch]
   simp only [qbind_branch_apply, tsum_fintype, Fintype.sum_bool, qpure_branch_apply]
   simp
 
@@ -374,7 +374,7 @@ theorem scChain_trace_add (O : QComp d Bool)
     ((scChain O q U).branch true ρ).trace + ((scChain O q U).branch false ρ).trace = ρ.trace := by
   induction q generalizing ρ with
   | zero =>
-    simp only [scChain, qbind_unit_branch, qpure_branch_apply, unitaryChannel_branch_apply]
+    simp only [scChain, qbind_unit_branch, qpure_branch_apply, UnitaryChannel.unitaryChannel_branch]
     simp [trace_mul_mul_conjTranspose_of_mem_unitaryGroup (U 0).prop]
   | succ q ih =>
     rw [scChain_succ_branch_true, scChain_succ_branch_false, trace_add, trace_add]
@@ -432,7 +432,7 @@ theorem scChain_branch_false_eq (H : Fin m → Fin n) (S : Finset (Fin m)) (q : 
         (chainOp ((oracleU m n w H : Matrix _ _ ℂ) * (1 - projS m n w S)) q U)ᴴ := by
   induction q generalizing ρ with
   | zero =>
-    simp only [scChain, qbind_unit_branch, qpure_branch_apply, unitaryChannel_branch_apply,
+    simp only [scChain, qbind_unit_branch, qpure_branch_apply, UnitaryChannel.unitaryChannel_branch,
       chainOp]
     simp
   | succ q ih =>

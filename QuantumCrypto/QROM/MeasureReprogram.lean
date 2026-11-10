@@ -177,13 +177,13 @@ theorem measChain_branch (o : Matrix.unitaryGroup d ℂ) (M : QComp d α)
   | zero =>
     cases q with
     | zero =>
-      simp only [measChain, simOp, qbind_unit_branch, unitaryChannel_branch_apply, hM,
+      simp only [measChain, simOp, qbind_unit_branch, UnitaryChannel.unitaryChannel_branch, hM,
         conjTranspose_mul, Matrix.mul_assoc]
     | succ q =>
       simp only [measChain, simOp, qbind_unit_branch]
       rw [qbind_branch_of_single _ _ a a]
       · simp only [qbind_unit_branch, qpure_branch_apply, ite_true,
-          oracleChain_unitaryChannel_branch, unitaryChannel_branch_apply, hM,
+          oracleChain_unitaryChannel_branch, UnitaryChannel.unitaryChannel_branch, hM,
           conjTranspose_mul, Matrix.mul_assoc]
       · intro a' ha'
         apply LinearMap.ext; intro σ
@@ -191,10 +191,10 @@ theorem measChain_branch (o : Matrix.unitaryGroup d ℂ) (M : QComp d α)
   | succ j ih =>
     cases q with
     | zero =>
-      simp only [measChain, simOp, qbind_unit_branch, unitaryChannel_branch_apply, hM,
+      simp only [measChain, simOp, qbind_unit_branch, UnitaryChannel.unitaryChannel_branch, hM,
         conjTranspose_mul, Matrix.mul_assoc]
     | succ q =>
-      simp only [measChain, simOp, qbind_unit_branch, unitaryChannel_branch_apply, ih,
+      simp only [measChain, simOp, qbind_unit_branch, UnitaryChannel.unitaryChannel_branch, ih,
         conjTranspose_mul, Matrix.mul_assoc]
 
 /-- At the last slot the operator of `measChain` is the projector after the
